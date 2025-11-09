@@ -54,7 +54,7 @@ A message split into multiple packets is sent by the Server, and the Client resp
 
 ---
 # User Datagram Protocol (UDP)
-[UDP](images/UDP-gif.gif)
+![UDP](images/UDP-gif.gif)
 ## 🌐 Overview
 
 **User Datagram Protocol (UDP)** is a **Transport Layer protocol** within the Internet Protocol (IP) suite.  
