@@ -1,4 +1,4 @@
-# 🚀 RCP Project: Reliable File Transfer over UDP with Sliding Window
+# Flow Control with Sliding window protocol
 
 This project implements a **reliable file transfer protocol** built on top of the **User Datagram Protocol (UDP)**. It utilizes the **Selective Repeat with NAK** algorithm for flow control and error management. The User Interface (UI) is structured as a Terminal GUI application (TUI) using the **Textual** library.
 
@@ -27,20 +27,21 @@ All communications between the Client and Server use a strictly defined packet s
 | Data | `2` | A packet carrying the actual file data. |
 | End transmission | `3` | Signals the end of a sequence of packets (a frame). |
 
-### 2. OPERATION\_TYPE Encoding
+### 2. OPERATION_TYPE Encoding
 
 This field is interpreted based on the preceding `PACKET_TYPE`:
 
-| Context | OPERATION\_TYPE | Code | Description |
-| :--- | :--- | :--- |
-| **PACKET\_TYPE 0 (Operation)** | Upload | `00` | Initiates a file upload. |
-| | Download | `01` | Initiates a file download. |
-| | Delete | `02` | Requests file deletion. |
-| | Move | `03` | Requests file movement. |
-| | Sliding Windows settings | `04` | Used to configure sliding window parameters. |
-| **PACKET\_TYPE 1 (ACK/NAK)** | NAK | `10` | Requests retransmission of a specific missing/corrupted packet. |
-| | ACK | `11` | Confirms successful receipt of a packet. |
-| **PACKET\_TYPE 2 (Data)** | Data | `20` | Data packet. The first character of the DATA field **must be the packet's sequence number**. |
+| Context | OPERATION_TYPE | Code | Description |
+|----------|----------------|------|-------------|
+| **PACKET_TYPE 0 (Operation)** | Upload | 00 | Initiates a file upload. |
+|  | Download | 01 | Initiates a file download. |
+|  | Delete | 02 | Requests file deletion. |
+|  | Move | 03 | Requests file movement. |
+|  | Sliding Window settings | 04 | Used to configure sliding window parameters. |
+| **PACKET_TYPE 1 (ACK/NAK)** | NAK | 10 | Requests retransmission of a missing/corrupted packet. |
+|  | ACK | 11 | Confirms successful receipt of a packet. |
+| **PACKET_TYPE 2 (Data)** | Data | 20 | Data packet. The first character of the DATA field **must be the packet's sequence number**. |
+
 
 ### Example Packet Exchange (Fragment)
 
@@ -86,10 +87,85 @@ The application uses **Textual** to provide an interactive experience within the
 
 ## 🛠️ Installation and Running
 
-This project is a **Python terminal GUI application** based on [Textual](https://textual.textualize.io/).
+## Prerequisites
 
-### 🔑 Prerequisites
+Make sure you have **Python 3.11+** installed.  
+You can check your Python version by running:
 
-Ensure you have **Python 3.11+** installed. You can check your version by running:
 ```bash
 python --version
+```
+
+---
+
+## Setup Instructions
+
+1. **Clone the repository**
+
+```bash
+git clone https://github.com/TUIASI-AC-IoT/proiectrcp2025-biteater
+cd proiectrcp2025-biteater
+```
+
+2. **Create a virtual environment (recommended)**
+
+```bash
+python -m venv venv
+```
+
+3. **Activate the virtual environment**
+
+- On **Windows**:
+
+```bash
+venv\Scripts\activate
+```
+
+- On **macOS / Linux**:
+
+```bash
+source venv/bin/activate
+```
+
+4. **Install dependencies**
+
+```bash
+pip install -r requirements.txt
+pip install textual-dev
+```
+
+5. **Run the application**
+
+Normal mode:
+
+```bash
+textual run main.py
+```
+
+To enter the developer mode (with print statements, events displayed and live css updates):
+
+a. **Run in terminal 1**
+
+```bash
+textual console
+```
+
+
+b. **Run in terminal 2**
+
+```bash
+textual run --dev main.py
+```
+
+The console is going to only listen to events happening in terminal 2 
+
+---
+
+
+## Troubleshooting
+
+- If you get errors about missing packages:
+
+```bash
+pip install textual
+```
