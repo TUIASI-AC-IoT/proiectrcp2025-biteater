@@ -53,7 +53,33 @@ A message split into multiple packets is sent by the Server, and the Client resp
 | **Client** | `111\0...` | `1` (ACK) + `1` (ACK) + `1` (ACK for Seq. Nr 1) |
 
 ---
+# User Datagram Protocol (UDP)
+[UDP](images/UDP-gif.gif)
+## 🌐 Overview
 
+**User Datagram Protocol (UDP)** is a **Transport Layer protocol** within the Internet Protocol (IP) suite.  
+It provides **fast**, **connectionless**, and **lightweight** communication between processes running on networked systems.
+
+Unlike TCP, UDP does **not** guarantee:
+- Delivery of packets  
+- Order of packets  
+- Error checking or correction  
+
+This makes UDP ideal for **real-time** and **time-sensitive** applications, where **speed** is more important than reliability.
+
+---
+
+## ⚙️ Key Characteristics
+
+| Feature | Description |
+|----------|--------------|
+| **Connectionless** | No connection setup before sending data. Each packet (datagram) is sent independently. |
+| **Unreliable Delivery** | Packets may be lost, duplicated, or received out of order. |
+| **No Congestion Control** | UDP sends data as fast as the application allows, without rate limiting. |
+| **Low Latency** | Minimal protocol overhead makes it ideal for fast communication. |
+| **Checksum Field** | Optional integrity check for detecting errors in transmission. |
+
+---
 ## ⚙️ Flow Control
 
 The project utilizes the **Sliding Window Protocol** specifically implemented as **Selective Repeat with NAK**.
@@ -169,3 +195,8 @@ The console is going to only listen to events happening in terminal 2
 ```bash
 pip install textual
 ```
+
+## Bibliography
+  - [UDP](https://www.geeksforgeeks.org/computer-networks/user-datagram-protocol-udp/)
+  - [Textual Documentation](https://textual.textualize.io/)
+  - [Textual GitHub Repository](https://github.com/Textualize/textual)
