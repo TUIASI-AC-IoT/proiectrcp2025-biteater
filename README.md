@@ -49,6 +49,7 @@ source venv/bin/activate
 
 ```bash
 pip install -r requirements.txt
+pip install textual-dev
 ```
 
 5. **Run the application**
@@ -91,3 +92,4 @@ pip install textual
 
 - [Textual Documentation](https://textual.textualize.io/)
 - [Textual GitHub Repository](https://github.com/Textualize/textual)
+
