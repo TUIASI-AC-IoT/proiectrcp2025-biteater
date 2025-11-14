@@ -20,8 +20,9 @@ class Send(ModalScreen):
         self.__stop_receiving = threading.Event()
         self.rx_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.tx_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.rx_socket.bind((HOST, PORT_TX))
-
+        self.rx_socket.bind((HOST, PORT_RX))
+        self.rx()
+        self.tx()
 
     CSS_PATH = "send_client.tcss"
 
@@ -51,13 +52,14 @@ class Send(ModalScreen):
             data, addr = self.rx_socket.recvfrom(1024)
         finally:
             self.rx_socket.close()
+        return data, addr
 
     @work(exclusive=True, thread=True)
     def rx(self):
         while not self.__stop_receiving.is_set():
             self.rx_socket.settimeout(1)
             try:
-                self.receive()
+                data, addr = self.receive()
             except socket.timeout:
                 continue
 
@@ -81,9 +83,7 @@ class ClientGUI(App):
     DEFAULT_MODE = 'send'
 
     def on_mount(self):
-        self.push_screen("send")
-
-
+        self.push_screen(Send())
 
 def main():
     ClientGUI().run()
