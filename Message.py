@@ -15,7 +15,11 @@ class PacketType(Enum):
 
 
 class Message:
-    def __init__(self, packet_type: PacketType = PacketType.INVALID, sequence: int = Constant.invalid_sequence, data = ""):
+    def __init__(self,
+                 packet_type: PacketType = PacketType.INVALID,
+                 sequence: int = Constant.invalid_sequence,
+                 data:str = ""):
+
         self.packet_type = packet_type
         self.sequence = sequence
         self.data = data
@@ -28,7 +32,7 @@ class Message:
 
     @staticmethod
     def deserialize(data_in):
-        decoded_data = data_in.decode()
+        decoded_data : str = data_in.decode()
         if len(decoded_data) >= 3:
             packet_type = decoded_data[0:2]
             index = 2
