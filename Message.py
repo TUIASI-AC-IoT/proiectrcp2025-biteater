@@ -17,7 +17,7 @@ class PacketType(Enum):
 class Message:
     def __init__(self,
                  packet_type: PacketType = PacketType.INVALID,
-                 sequence: int = Constant.invalid_sequence,
+                 sequence: int = Constant.INVALID_SEQUENCE,
                  data:str = ""):
 
         self.packet_type = packet_type
@@ -47,7 +47,7 @@ class Message:
             if sequence:
                 sequence_int = int(sequence)
             else:
-                sequence_int = Constant.invalid_sequence.value
+                sequence_int = Constant.INVALID_SEQUENCE.value
             index += 1
             content = decoded_data[index:]
             return Message(PacketType(packet_type), sequence_int, content)
