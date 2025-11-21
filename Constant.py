@@ -2,7 +2,7 @@ from enum import Enum
 
 class Constant(Enum):
     WINDOW_SIZE = 4
-    PACKET_TIMEOUT = 5
+    PACKET_TIMEOUT = 10
     INVALID_SEQUENCE = 0
     SLEEP_TIME = 0.1
     LOSS_PROB = 0.4

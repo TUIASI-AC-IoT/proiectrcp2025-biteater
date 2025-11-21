@@ -24,6 +24,8 @@ class Message:
         self.sequence = sequence
         self.data = data
 
+    def __str__(self):
+        return f"NR {self.sequence} Tip Packet: {self.packet_type}, Continut: {self.data}"
 
     def serialize(self):
         result: str = self.packet_type.value + str(self.sequence) + " " + self.data
