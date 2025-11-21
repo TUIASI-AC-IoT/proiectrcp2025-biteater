@@ -119,8 +119,8 @@ First char identifies the packet number
      <li>512 chars max</li>
      <li>First char identifies the packet number</li>
    </ul>
-
-
+## Interactiunea dintre clasa Sender si Server
+![Diagrama Arhitecturii](images/sender-server.png)
 
 ## Resources
 

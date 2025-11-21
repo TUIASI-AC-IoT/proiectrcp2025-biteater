@@ -9,7 +9,7 @@ from Message import PacketType, Message
 SENDER_ADDR = ("127.0.0.1", 5000)
 RECEIVER_ADDR = ("127.0.0.1", 6000)
 content_ = ["a", "b", "c", "d", "e", "f", "g", "h", "z"]
-content_to_message = [Message(PacketType.DATA, i + 1, content_[i]) for i in range(0, len(content_))]
+content_to_message = [Message(PacketType.DATA, i, content_[i]) for i in range(0, len(content_))]
 
 class Sender:
     def __init__(self, content = None, packet_type: PacketType = PacketType.INVALID, bind_addr = SENDER_ADDR , receiver_addr = RECEIVER_ADDR):
