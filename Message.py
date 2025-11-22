@@ -1,5 +1,7 @@
+import struct
 from enum import Enum
 from Constant import Constant
+
 
 class PacketType(Enum):
     UPLOAD = "00"
@@ -28,29 +30,30 @@ class Message:
         return f"NR {self.sequence} Tip Packet: {self.packet_type}, Continut: {self.data}"
 
     def serialize(self):
-        result: str = self.packet_type.value + str(self.sequence) + " " + self.data
-        return result.encode()
+        packet_type = self.packet_type.value.encode('ascii') # 2 bytes
+        # '!I' = 4 bytes for Sequence Number (Unsigned Integer, Network Byte Order)
+        seq = struct.pack('!I', self.sequence)
+        data = self.data.encode('utf-8')
+
+        return packet_type + seq + data
 
 
     @staticmethod
     def deserialize(data_in):
-        decoded_data : str = data_in.decode()
-        if len(decoded_data) >= 3:
-            packet_type = decoded_data[0:2]
-            index = 2
-            sequence = ""
-            while True:
-                current_char = decoded_data[index]
-                if current_char.isdecimal():
-                    sequence += current_char
-                elif current_char.isspace():
-                    break
-                index += 1
-            if sequence:
-                sequence_int = int(sequence)
-            else:
-                sequence_int = Constant.INVALID_SEQUENCE.value
-            index += 1
-            content = decoded_data[index:]
-            return Message(PacketType(packet_type), sequence_int, content)
-        return Message()
+        try:
+            header = data_in[:Constant.HEADER_SIZE.value]
+            # '2s' = 2 bytes for PacketType (e.g., "11")
+            # '!I' = 4 bytes for Sequence Number (Unsigned Integer, Network Byte Order)
+            packet_type_encoded, sequence = struct.unpack('!2sI', header)
+            packet_type = packet_type_encoded.decode('ascii').strip()
+            data_encoded = data_in[Constant.HEADER_SIZE.value:]
+            data = data_encoded.decode('utf-8')
+
+            return Message(PacketType(packet_type), sequence, data)
+
+        except struct.error as e:
+            print(f"[Deserialize Error] Struct unpacking failed: {e}")
+            return Message()
+        except (UnicodeDecodeError, ValueError) as e:
+            print(f"[Deserialize Error] Data or type decoding failed: {e}")
+            return Message()

@@ -26,8 +26,6 @@ class Receiver:
 
         self.buffer = {}  #sequence -> message
 
-        self.lock = Lock()
-
         self.delivered = []
 
     def start(self):
@@ -49,7 +47,7 @@ class Receiver:
         print(message)
         # 1. END packet -> set total packets to receive
         if message.packet_type == PacketType.END:
-            self.expected_total = seq - 1
+            self.expected_total = seq
             self.__send_ack(seq)
             return
 
@@ -72,9 +70,7 @@ class Receiver:
             self.delivered.append(msg)
             self.window_base += 1
 
-        # 6. Stop: we received END + all packets
-        if self.expected_total is not None and self.window_base >= self.expected_total:
-            self.stop()
+
 
     def __receive_loop(self):
         while self.__running.is_set():
@@ -82,16 +78,17 @@ class Receiver:
             raw_data, addr = self.__sock.recvfrom(512)
 
             message = Message.deserialize(raw_data)
-            with self.lock:
-                self.process_packet(message)
 
+            self.process_packet(message)
+
+            # 6. Stop: we received END + all packets
+            if self.expected_total is not None and self.window_base >= self.expected_total:
+                print(self.delivered)
+                self.stop()
 
 def main():
     receiver = Receiver()
     receiver.start()
-
-
-
 
 
 if __name__== "__main__":

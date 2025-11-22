@@ -11,8 +11,8 @@ def main():
     engine.setProperty('rate', speed)
 
 
-    with open("../transmitor.txt", "rb") as fd:
-        with open("../received.txt", "wb") as fd_out:
+    with open("../TemporaryInvalid/transmitor.txt", "rb") as fd:
+        with open("../TemporaryInvalid/received.txt", "wb") as fd_out:
             # print(fd.readline(3))
 
             c=1
