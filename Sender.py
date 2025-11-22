@@ -11,8 +11,10 @@ RECEIVER_ADDR = ("127.0.0.1", 6000)
 content_ = ["a", "b", "c", "d", "e", "f", "g", "h", "z"]
 content_to_message = [Message(PacketType.DATA, i, content_[i]) for i in range(0, len(content_))]
 
-class Sender:
-    def __init__(self, content = None, packet_type: PacketType = PacketType.INVALID, bind_addr = SENDER_ADDR , receiver_addr = RECEIVER_ADDR):
+class Sender():
+    def __init__(self, content=None, packet_type: PacketType = PacketType.INVALID, bind_addr=SENDER_ADDR,
+                 receiver_addr=RECEIVER_ADDR):
+
         if content is None:
             self.__content = []
         else:
@@ -65,6 +67,7 @@ class Sender:
                 continue
 
             message = Message.deserialize(raw_data)
+            print(message)
             if message.packet_type.value == "11": # ACK type
                 with self.__lock:
                     # pentru self.timers ,self.left_window_margin, self.acked_packets (se ruleaza alt thread care porneste timere, si verifica existenta unui ack)
@@ -132,9 +135,19 @@ class Sender:
         self.__timers[seq] = t # dictionar seq -> Timer
 
 def test_receive_message():
+    sock = socket(AF_INET, SOCK_DGRAM)
+    sock.bind(RECEIVER_ADDR)
     while True:
-        sock = socket(AF_INET, SOCK_DGRAM)
-        sock.bind(RECEIVER_ADDR)
         raw, addr = sock.recvfrom(512)
         message = Message.deserialize(raw)
         print(message)
+
+def main():
+
+
+    sender = Sender(content_,PacketType.DATA)
+    sender.start()
+
+
+if __name__ == "__main__":
+    main()

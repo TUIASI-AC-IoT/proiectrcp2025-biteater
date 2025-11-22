@@ -4,71 +4,95 @@ from threading import Thread, Timer, Event, Lock
 from socket import socket, AF_INET, SOCK_DGRAM
 from Constant import Constant
 from Message import PacketType, Message
+from Sender import Sender
+
 SENDER_ADDR = ("127.0.0.1", 5000)
 RECEIVER_ADDR = ("127.0.0.1", 6000)
 
 
 
 class Receiver:
-    def __init__(self, bind_addr = RECEIVER_ADDR,sender_addr = SENDER_ADDR):
+    def __init__(self, bind_addr=RECEIVER_ADDR, sender_addr=SENDER_ADDR):
+
 
         self.__sock = socket(AF_INET,SOCK_DGRAM)
         self.__sock.bind(bind_addr)
         self.__sender_addr = sender_addr
         self.__running: Event = Event()
-        self.__buffer = []
-        self.current_packet = None
-        self.total_packets_to_receive = 0
-        self.total_packets_received = 0
-        #use Thread for -> send ACK
-        #main process -> process Message
 
+        self.window_size = Constant.WINDOW_SIZE.value
+        self.window_base = 0
+        self.expected_total = None
+
+        self.buffer = {}  #sequence -> message
+
+        self.lock = Lock()
+
+        self.delivered = []
 
     def start(self):
         print("Receiver started")
         self.__running.set()
         self.__receive_loop()
-        self.total_packets_to_receive = 0
 
     def stop(self):
         self.__running.clear()
         self.__sock.close()
 
-    def __send_acks(self):
-        ack = Message(PacketType.ACK,self.current_packet,"")  #send ACK
+    def __send_ack(self,seq):
+        ack = Message(PacketType.ACK,seq,"")  #send ACK
         self.__sock.sendto(ack.serialize(), self.__sender_addr)
 
     def process_packet(self,message):
 
-        if self.total_packets_to_receive !=0 : # we received the END packet
-            if self.total_packets_received == self.total_packets_to_receive: #verify if we received all packets
-                self.stop()
+        seq = message.sequence
+        print(message)
+        # 1. END packet -> set total packets to receive
+        if message.packet_type == PacketType.END:
+            self.expected_total = seq - 1
+            self.__send_ack(seq)
+            return
 
-        else:
-            index = message.sequence
-            packet_exist_in_buffer = False
-            for packet in self.__buffer:
-                if packet.sequence == index:
-                    packet_exist_in_buffer = True
-            if not packet_exist_in_buffer:
-                self.__buffer.append(message)
-                self.total_packets_received += 1
+        # 2. If it's duplicated or deprecated
+        if seq in self.buffer or seq < self.window_base:
+            self.__send_ack(seq)
+            return
 
+        # 3. Verify if seq it's out of window -> too new
+        if seq >= self.window_base + self.window_size:
+            return
+
+        # 4. Valid packet
+        self.buffer[seq] = message
+        self.__send_ack(seq)
+
+        # 5. Process packet -> deliver
+        while self.window_base in self.buffer:
+            msg = self.buffer.pop(self.window_base)
+            self.delivered.append(msg)
+            self.window_base += 1
+
+        # 6. Stop: we received END + all packets
+        if self.expected_total is not None and self.window_base >= self.expected_total:
+            self.stop()
 
     def __receive_loop(self):
         while self.__running.is_set():
-            try:
-                raw_data, addr = self.__sock.recvfrom(512)
-            except OSError:
-                time.sleep(0.5)
-                continue
+
+            raw_data, addr = self.__sock.recvfrom(512)
 
             message = Message.deserialize(raw_data)
+            with self.lock:
+                self.process_packet(message)
 
-            if message.packet_type == PacketType.END:
-                # self.stop() # we don't stop it, we may still have packet to receive
-                self.total_packets_to_receive = message.sequence - 1
 
-            self.current_packet = message.sequence
-            self.__send_acks()
-            self.process_packet(message)
+def main():
+    receiver = Receiver()
+    receiver.start()
+
+
+
+
+
+if __name__== "__main__":
+    main()
