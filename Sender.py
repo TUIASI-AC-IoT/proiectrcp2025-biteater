@@ -20,7 +20,6 @@ class Sender:
         self.__sock = socket(AF_INET, SOCK_DGRAM)
         self.__sock.bind(bind_addr)
         self.__receiver_addr = receiver_addr
-
         self.__window_size = Constant.WINDOW_SIZE.value
         self.__timeout = Constant.PACKET_TIMEOUT.value
         self.__current_packet = 0                         # pachetul curent care se transmite
