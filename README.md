@@ -196,46 +196,12 @@ The console is going to only listen to events happening in terminal 2
 pip install textual
 ```
 
-## Bibliography
-  - [UDP](https://www.geeksforgeeks.org/computer-networks/user-datagram-protocol-udp/)
-  - [Textual Documentation](https://textual.textualize.io/)
-  - [Textual GitHub Repository](https://github.com/Textualize/textual)
-### Details about codification:
-
-1. **Packet type:**
-
-| PACKET_TYPE       | CODE |
-|:------------------|:-----|
-| Operation         | 0    |
-| ACK/NAK           | 1    |
-| Data              | 2    |
-| End transmission  | 3    |
-
-2. **Operation Type:**
-
-| OPERATION_TYPE           | CODE(PACKET_TYPE+OPERATION_TYPE) |
-|:-------------------------|:---------------------------------|
-| Upload                   |                00                |
-| Download                 |                01                |
-| Delete                   |                02                |
-| Move                     |                03                |
-| Sliding Windows settings |                04                |
-| NAK                      |                10                |
-| ACK                      |                11                |
-| Data                     |                20                |
-
-First char identifies the packet number
-
-3. **Data:**
-   <ul>
-     <li>512 chars max</li>
-     <li>First char identifies the packet number</li>
-   </ul>
 ## Interactiunea dintre clasa Sender si Server
 ![Diagrama Arhitecturii](images/sender-server.png)
 
 ## Resources
 
+- [UDP](https://www.geeksforgeeks.org/computer-networks/user-datagram-protocol-udp/)
 - [Textual Documentation](https://textual.textualize.io/)
 - [Textual GitHub Repository](https://github.com/Textualize/textual)
 
