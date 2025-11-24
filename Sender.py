@@ -67,8 +67,10 @@ class Sender():
                 continue
 
             message = Message.deserialize(raw_data)
-            print(message)
-            if message.packet_type.value == "11": # ACK type
+
+            if message.packet_type.value == "11":
+                print(message)
+                # ACK type
                 with self.__lock:
                     # pentru self.timers ,self.left_window_margin, self.acked_packets (se ruleaza alt thread care porneste timere, si verifica existenta unui ack)
                     # mai exact __send_packet() si __start_timer()
