@@ -12,4 +12,4 @@ class Constant(Enum):
     # '2s' = 2 bytes for PacketType (e.g., "11")
     # '!I' = 4 bytes for Sequence Number (Unsigned Integer, Network Byte Order)
     HEADER_SIZE = struct.calcsize('!2sI')  # Should be 6 bytes (2 + 4)
-    PACKET_SIZE = 512
+    PACKET_SIZE = 32

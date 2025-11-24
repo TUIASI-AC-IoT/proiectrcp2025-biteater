@@ -1,17 +1,17 @@
 import os
 from asyncio import sleep
-import pyttsx3
+
 
 def main():
 
     fd_position = 0
-    engine = pyttsx3.init()
+
 
     speed = 150
     engine.setProperty('rate', speed)
 
 
-    with open("../TemporaryInvalid/transmitor.txt", "rb") as fd:
+    with open("../transmitor.txt", "rb") as fd:
         with open("../TemporaryInvalid/received.txt", "wb") as fd_out:
             # print(fd.readline(3))
 
@@ -35,9 +35,6 @@ def main():
 
             missed_packet = 3
             print(f"\n\tCaut un packet pierdut...${missed_packet}...")
-            msg = f"Packet number {missed_packet} has been missed"
-            engine.say(msg)
-            engine.runAndWait()
             fd.seek((missed_packet-1)*10)
             content = fd.read(10)
             fd_out.seek(10*(missed_packet-1))

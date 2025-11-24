@@ -1,15 +1,10 @@
-import random
-import time
-from threading import Thread, Timer, Event, Lock
+from threading import Event
 from socket import socket, AF_INET, SOCK_DGRAM
 from Constant import Constant
 from Message import PacketType, Message
-from Sender import Sender
 
 SENDER_ADDR = ("127.0.0.1", 5000)
 RECEIVER_ADDR = ("127.0.0.1", 6000)
-
-
 
 class Receiver:
     def __init__(self, bind_addr=RECEIVER_ADDR, sender_addr=SENDER_ADDR):
@@ -20,8 +15,8 @@ class Receiver:
         self.__sender_addr = sender_addr
         self.__running: Event = Event()
 
-        self.window_size = Constant.WINDOW_SIZE.value
-        self.window_base = 0
+        self.__window_size = Constant.WINDOW_SIZE.value
+        self.__window_base = 0
         self.expected_total = None
 
         self.buffer = {}  #sequence -> message
@@ -38,7 +33,7 @@ class Receiver:
         self.__sock.close()
 
     def __send_ack(self,seq):
-        ack = Message(PacketType.ACK,seq,"")  #send ACK
+        ack = Message(PacketType.ACK,seq,"")
         self.__sock.sendto(ack.serialize(), self.__sender_addr)
 
     def process_packet(self,message):
@@ -52,12 +47,12 @@ class Receiver:
             return
 
         # 2. If it's duplicated or deprecated
-        if seq in self.buffer or seq < self.window_base:
+        if seq in self.buffer or seq < self.__window_base:
             self.__send_ack(seq)
             return
 
         # 3. Verify if seq it's out of window -> too new
-        if seq >= self.window_base + self.window_size:
+        if seq >= self.__window_base + self.__window_size:
             return
 
         # 4. Valid packet
@@ -65,12 +60,10 @@ class Receiver:
         self.__send_ack(seq)
 
         # 5. Process packet -> deliver
-        while self.window_base in self.buffer:
-            msg = self.buffer.pop(self.window_base)
+        while self.__window_base in self.buffer:
+            msg = self.buffer.pop(self.__window_base)
             self.delivered.append(msg)
-            self.window_base += 1
-
-
+            self.__window_base += 1
 
     def __receive_loop(self):
         while self.__running.is_set():
@@ -82,8 +75,9 @@ class Receiver:
             self.process_packet(message)
 
             # 6. Stop: we received END + all packets
-            if self.expected_total is not None and self.window_base >= self.expected_total:
-                print(self.delivered)
+            if self.expected_total is not None and self.__window_base >= self.expected_total:
+                for packet in self.delivered:
+                    print(packet.data)
                 self.stop()
 
 def main():
