@@ -12,35 +12,36 @@ The main objective is to demonstrate the ability to construct a virtual "reliabl
 
 All communications between the Client and Server use a strictly defined packet structure (UDP datagrams):
 
-| Field | Size | Description |
-| :--- | :--- | :--- |
-| **PACKET\_TYPE** | 1 char | Identifies the packet's overall purpose (Operation, ACK, Data, etc.). |
-| **OPERATION\_TYPE** | 1 char | Details the specific operation or state (Upload, NAK, ACK, etc.). |
-| **DATA** | 512 char (max) | The payload or supplementary information. |
+| Field               | Size                      | Description                                                           |
+|:--------------------|:--------------------------|:----------------------------------------------------------------------|
+| **PACKET\_TYPE**    | 1 char ( 1 byte )         | Identifies the packet's overall purpose (Operation, ACK, Data, etc.). |
+| **OPERATION\_TYPE** | 1 char ( 1 byte )         | Details the specific operation or state (Upload, ACK, etc.).          |
+| **SEQUENCE**        | int ( 4 bytes )           | Denotes packet order                                                  |
+| **DATA**            | 512 varchar ( 512 bytes ) | The payload or supplementary information.                             |
+
 
 ### 1. PACKET\_TYPE Encoding
 
-| PACKET\_TYPE | Code | Description |
-| :--- | :--- | :--- |
-| Operation | `0` | A packet that initiates an action (e.g., Upload, Delete). |
-| ACK/NAK | `1` | Acknowledgment or Negative Acknowledgment response. |
-| Data | `2` | A packet carrying the actual file data. |
-| End transmission | `3` | Signals the end of a sequence of packets (a frame). |
+| PACKET\_TYPE     | Code | Description                                               |
+|:-----------------| :--- |:----------------------------------------------------------|
+| Operation        | `0` | A packet that initiates an action (e.g., Upload, Delete). |
+| ACK              | `1` | Acknowledgment response.                                  |
+| Data             | `2` | A packet carrying the actual file data.                   |
+| End transmission | `3` | Signals the end of a sequence of packets (a frame).       |
 
 ### 2. OPERATION_TYPE Encoding
 
 This field is interpreted based on the preceding `PACKET_TYPE`:
 
-| Context | OPERATION_TYPE | Code | Description |
-|----------|----------------|------|-------------|
-| **PACKET_TYPE 0 (Operation)** | Upload | 00 | Initiates a file upload. |
-|  | Download | 01 | Initiates a file download. |
-|  | Delete | 02 | Requests file deletion. |
-|  | Move | 03 | Requests file movement. |
-|  | Sliding Window settings | 04 | Used to configure sliding window parameters. |
-| **PACKET_TYPE 1 (ACK/NAK)** | NAK | 10 | Requests retransmission of a missing/corrupted packet. |
-|  | ACK | 11 | Confirms successful receipt of a packet. |
-| **PACKET_TYPE 2 (Data)** | Data | 20 | Data packet. The first character of the DATA field **must be the packet's sequence number**. |
+| Context                       | OPERATION_TYPE | Code | Description |
+|-------------------------------|----------------|------|-------------|
+| **PACKET_TYPE 0 (Operation)** | Upload | 00   | Initiates a file upload. |
+|                               | Download | 01   | Initiates a file download. |
+|                               | Delete | 02   | Requests file deletion. |
+|                               | Move | 03   | Requests file movement. |
+|                               | Sliding Window settings | 04   | Used to configure sliding window parameters. |
+| **PACKET_TYPE 1 (ACK)**       | ACK | 10   | Confirms successful receipt of a packet. |
+| **PACKET_TYPE 2 (Data)**      | Data | 20   | Data packet. The first character of the DATA field **must be the packet's sequence number**. |
 
 
 ### Example Packet Exchange (Fragment)
@@ -82,10 +83,9 @@ This makes UDP ideal for **real-time** and **time-sensitive** applications, wher
 ---
 ## ⚙️ Flow Control
 
-The project utilizes the **Sliding Window Protocol** specifically implemented as **Selective Repeat with NAK**.
+The project utilizes the **Sliding Window Protocol** specifically implemented as **Selective Repeat**.
 
-* **Selective Repeat:** Only lost or corrupted packets are retransmitted (requested via **NAK**), not the entire window.
-* **NAK (Negative Acknowledgement):** The receiver explicitly sends a `10` (NAK) packet to request the retransmission of a specific packet whose sequence number is expected.
+* **Selective Repeat:** Only lost or corrupted packets are retransmitte, not the entire window.
 * **Settings:** Parameters like the **window size** and **Timeout** interval are configurable via the Server UI.
 
 ---

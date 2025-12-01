@@ -9,6 +9,7 @@ from Message import PacketType, Message
 SENDER_ADDR = ("127.0.0.1", 5000)
 RECEIVER_ADDR = ("127.0.0.1", 6000)
 content_ = ["anna", "belly", "card", "dima", "elisei", "frate", "gica", "hrean", "zoo"]
+content__ = [Message(PacketType.DATA, i, content_[i]) if i != 0 else Message(PacketType.DELETE, i, content_[i])  for i in range(0, len(content_)) ]
 
 class Sender(Thread):
     def __init__(self, content=None, packet_type: PacketType = PacketType.INVALID, bind_addr=SENDER_ADDR,
@@ -16,9 +17,9 @@ class Sender(Thread):
 
         super().__init__()
         if content is None:
-            self.__content = []
+            self.__content: list[Message] = []
         else:
-            self.__content = content
+            self.__content: list[Message] = content
         self.__sock = socket(AF_INET, SOCK_DGRAM)
         self.__sock.bind(bind_addr)
         self.__receiver_addr = receiver_addr
@@ -32,14 +33,21 @@ class Sender(Thread):
         self.__timers = {}                                # seq -> Timer
 
         self.__total_packets = len(self.__content)
-        self.__packet_type = packet_type
         # we do not wait for it's termination (daemon = True), it is automatically terminated
         self.__ack_thread = Thread(target=self.__receive_acks, daemon=True)
 
+    def set_timeout(self, timeout: float):
+        self.__timeout = timeout
 
-    def set_content(self, content, packet_type = PacketType.INVALID):
+    def set_window_size(self, window_size: int):
+        self.__window_size = window_size
+
+    def set_content(self, content):
         self.__content = content
-        self.__packet_type = packet_type
+        self.__current_packet = 0                         # pachetul curent care se transmite
+        self.__left_window_margin = 0                     # indica indexul din stanga a ferestrei glisante
+        self.__acked_packets.clear()
+        self.__timers.clear()
         self.__total_packets = len(self.__content)
 
     def run(self):
@@ -97,9 +105,7 @@ class Sender(Thread):
 
     def __send_packet(self, seq: int):
 
-        data = self.__content[seq]
-        message = Message(self.__packet_type, seq, data)
-
+        message = self.__content[seq]
         try:
             if random() > Constant.LOSS_PROB.value:              # simulate packet loss
                 self.__sock.sendto(message.serialize(), self.__receiver_addr)
@@ -156,8 +162,7 @@ def test_receive_message():
         print(message)
 
 def main():
-    sender = Sender(content_,PacketType.DATA)
-
+    sender = Sender(content__,PacketType.DATA)
     # thread1 = Thread(target=test_receive_message)
     # thread1.daemon = True
     # thread1.start()

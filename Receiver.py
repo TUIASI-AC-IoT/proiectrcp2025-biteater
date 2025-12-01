@@ -9,7 +9,6 @@ RECEIVER_ADDR = ("127.0.0.1", 6000)
 class Receiver:
     def __init__(self, bind_addr=RECEIVER_ADDR, sender_addr=SENDER_ADDR):
 
-
         self.__sock = socket(AF_INET,SOCK_DGRAM)
         self.__sock.bind(bind_addr)
         self.__sender_addr = sender_addr
@@ -22,6 +21,9 @@ class Receiver:
         self.buffer = {}  #sequence -> message
 
         self.delivered = []
+
+    def set_window_size(self, window_size: int):
+        self.__window_size = window_size
 
     def start(self):
         print("Receiver started")
