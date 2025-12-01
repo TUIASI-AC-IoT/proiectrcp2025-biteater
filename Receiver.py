@@ -1,10 +1,7 @@
-import random
-import time
-from threading import Thread, Timer, Event, Lock
+from threading import Event
 from socket import socket, AF_INET, SOCK_DGRAM
 from Constant import Constant
 from Message import PacketType, Message
-from Sender import Sender
 
 SENDER_ADDR = ("127.0.0.1", 5000)
 RECEIVER_ADDR = ("127.0.0.1", 6000)
@@ -13,7 +10,6 @@ RECEIVER_ADDR = ("127.0.0.1", 6000)
 
 class Receiver:
     def __init__(self, bind_addr=RECEIVER_ADDR, sender_addr=SENDER_ADDR):
-
 
         self.__sock = socket(AF_INET,SOCK_DGRAM)
         self.__sock.bind(bind_addr)
