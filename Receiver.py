@@ -22,6 +22,9 @@ class Receiver:
 
         self.delivered = []
 
+    def set_window_size(self, window_size: int):
+        self.__window_size = window_size
+
     def start(self):
         print("Receiver started")
         self.__running.set()

@@ -83,7 +83,6 @@ class Client:
                             continue
                     # change the settings internally
                     self.__sender.set_timeout(timeout)
-                    self.__receiver.set_timeout(timeout)
                     self.__sender.set_window_size(window_size)
                     self.__receiver.set_window_size(window_size)
                     # change the settings externally (server)
