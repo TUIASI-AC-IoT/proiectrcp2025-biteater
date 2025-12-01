@@ -1,6 +1,7 @@
 from Message import PacketType, Message
 from Receiver import Receiver
 from Sender import Sender
+from DivideFile import divide_file
 
 class Client:
     window_str = "window_size(int)="
@@ -37,10 +38,12 @@ class Client:
                     # get file hierarchy
                     file_name: str = input("FileName(abs_path) =  ")
                     self.__append_message(PacketType.DATA, file_name)
-                    # content.append(file_content)
+                    file_content = divide_file(file_name)
+                    # adds to self.__content the elements of file_content
+                    self.__content.extend(file_content)
                     self.__sender.set_content(self.__content)
                     self.__sender.start()
-                    # self.__sender.join()
+                    self.__sender.join()
 
                 case PacketType.DOWNLOAD:
                     # get file hierarchy
@@ -48,7 +51,7 @@ class Client:
                     self.__append_message(PacketType.DATA, file_name)
                     self.__sender.set_content(self.__content)
                     self.__sender.start()
-                    # self.__sender.join()
+                    self.__sender.join()
                     self.__receiver.start() # TODO: TO RESET inside receiver class [delivered] every time I call receiver
                     # reconstruct_file(self.__receiver.delivered, file_name)
 
@@ -58,7 +61,7 @@ class Client:
                     self.__append_message(PacketType.DATA, file_name)
                     self.__sender.set_content(self.__content)
                     self.__sender.start()
-                    # self.__sender.join()
+                    self.__sender.join()
 
                 case PacketType.MOVE:
                     # get file hierarchy
@@ -68,7 +71,7 @@ class Client:
                     self.__append_message(PacketType.DATA, data)
                     self.__sender.set_content(self.__content)
                     self.__sender.start()
-                    # self.__sender.join()
+                    self.__sender.join()
 
                 case PacketType.SETTINGS:
                     window_size = 0
