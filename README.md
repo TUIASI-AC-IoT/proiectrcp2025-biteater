@@ -45,7 +45,7 @@ This field is interpreted based on the preceding `PACKET_TYPE`:
 
 ## 🚀 Client Protocol Documentation
 
-This document describes the sequence of `Message` packets sent by the client for various operations, including file transfer and connection settings.
+This section describes the sequence of `Message` packets sent by the client for various operations, including file transfer and connection settings.
 
 The message structure is `Message(PacketType, SequenceNumber, Data)`.
 
