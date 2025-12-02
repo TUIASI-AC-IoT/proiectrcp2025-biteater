@@ -11,3 +11,10 @@ def reconstruct_file(packet_list, filename):
             fd.seek(Constant.PACKET_SIZE.value * c)
             fd.write(packet)
             c += 1
+
+
+def reconstruct_string(packet_list) -> str:
+    msg = ""
+    for packet in packet_list:
+        msg += packet.data
+    return msg
