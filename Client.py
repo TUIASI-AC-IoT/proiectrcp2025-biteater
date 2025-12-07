@@ -6,6 +6,15 @@ from DivideFile import divide_file
 class Client:
     window_str = "window_size(int)="
     timeout_str = "timeout(float)="
+    sender_recv = ("127.0.0.1", 5000)
+    sender_send = ("127.0.0.1", 6000)
+    receiver_recv = ("127.0.0.1", 7000)
+    receiver_send = ("127.0.0.1", 8000)
+    # Server
+    sender_recv = ("127.0.0.1", 8000)
+    sender_send = ("127.0.0.1", 7000)
+    receiver_recv = ("127.0.0.1", 6000)
+    receiver_send = ("127.0.0.1", 5000)
 
     def __init__(self):
         self.__sender = Sender()
@@ -67,8 +76,8 @@ class Client:
                     # get file hierarchy
                     src: str = input("src(abs_path) =  ")
                     dst: str = input("dst(abs_path) =  ")
-                    data = src + '|' + dst
-                    self.__append_message(PacketType.DATA, data)
+                    self.__append_message(PacketType.DATA, src)
+                    self.__append_message(PacketType.DATA, dst)
                     self.__sender.set_content(self.__content)
                     self.__sender.start()
                     self.__sender.join()
