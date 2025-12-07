@@ -82,6 +82,9 @@ class Receiver:
                     print(packet.data)
                 self.stop()
 
+    def get_ordered_packets(self):
+        return self.delivered
+
 def main():
     receiver = Receiver()
     receiver.start()
