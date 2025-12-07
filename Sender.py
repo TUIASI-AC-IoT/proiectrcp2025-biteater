@@ -1,26 +1,24 @@
 from random import random
 from time import sleep
 from threading import Thread, Timer, Event, RLock
-from socket import socket, AF_INET, SOCK_DGRAM
 from Constant import Constant
 from Message import PacketType, Message
-
+import socket
 
 SENDER_ADDR = ("127.0.0.1", 5000)
 RECEIVER_ADDR = ("127.0.0.1", 6000)
 content_ = ["anna", "belly", "card", "dima", "elisei", "frate", "gica", "hrean", "zoo"]
 content__ = [Message(PacketType.DATA, i, content_[i]) if i != 0 else Message(PacketType.DELETE, i, content_[i])  for i in range(0, len(content_)) ]
 
-class Sender(Thread):
-    def __init__(self, content=None, packet_type: PacketType = PacketType.INVALID, bind_addr=SENDER_ADDR,
+class Sender:
+    def __init__(self, bind_addr=SENDER_ADDR,
                  receiver_addr=RECEIVER_ADDR):
 
-        super().__init__()
-        if content is None:
-            self.__content: list[Message] = []
-        else:
-            self.__content: list[Message] = content
-        self.__sock = socket(AF_INET, SOCK_DGRAM)
+        self.__content: list[Message] = []
+        self.__sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # Permite refolosirea adresei imediat
+        self.__sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.__bind_address = bind_addr                     #temp
         self.__sock.bind(bind_addr)
         self.__receiver_addr = receiver_addr
         self.__window_size = Constant.WINDOW_SIZE.value
@@ -50,7 +48,7 @@ class Sender(Thread):
         self.__timers.clear()
         self.__total_packets = len(self.__content)
 
-    def run(self):
+    def start(self):
         print("Sender is starting...")
         self.__running.set()
         self.__sock.settimeout(Constant.SOCK_TIMEOUT.value)
@@ -152,7 +150,7 @@ class Sender(Thread):
 
 
 def test_receive_message():
-    sock = socket(AF_INET, SOCK_DGRAM)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind(RECEIVER_ADDR)
     while True:
         raw, addr = sock.recvfrom(Constant.PACKET_SIZE.value)

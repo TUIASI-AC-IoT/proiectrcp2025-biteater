@@ -249,7 +249,38 @@ pip install textual
 
 ## Interactiunea dintre clasa Sender si Server
 ![Diagrama Arhitecturii](images/sender-server.png)
+## Client-Server Port Communication
+```mermaid
+flowchart LR
+    %% Stiluri pentru noduri
+    classDef client stroke:#01579b,stroke-width:2px;
+    classDef server stroke:#4a148c,stroke-width:2px;
 
+    subgraph CLIENT_SIDE [CLIENT]
+        direction TB
+        C_Sender("Sender<br>(Ascultă: 5000)<br>(Trimite către: 6000)"):::client
+        C_Receiver("Receiver<br>(Ascultă: 7000)<br>(Trimite către: 8000)"):::client
+    end
+
+    subgraph SERVER_SIDE [SERVER]
+        direction TB
+        S_Sender("Sender<br>(Ascultă: 8000)<br>(Trimite către: 7000)"):::server
+        S_Receiver("Receiver<br>(Ascultă: 6000)<br>(Trimite către: 5000)"):::server
+    end
+
+    %% Conexiunile (Săgețile din desen)
+    %% Client Sender trimite la Server Receiver pe 6000
+    C_Sender -- Port 6000 --> S_Receiver
+    
+    %% Server Receiver răspunde la Client Sender pe 5000
+    S_Receiver -- Port 5000 --> C_Sender
+
+    %% Server Sender trimite la Client Receiver pe 7000
+    S_Sender -- Port 7000 --> C_Receiver
+
+    %% Client Receiver răspunde la Server Sender pe 8000
+    C_Receiver -- Port 8000 --> S_Sender
+```
 ## Resources
 
 - [UDP](https://www.geeksforgeeks.org/computer-networks/user-datagram-protocol-udp/)
