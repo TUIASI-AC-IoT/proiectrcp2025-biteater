@@ -17,7 +17,9 @@ class Sender:
         self.__content: list[Message] = []
         self.__sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         # Permite refolosirea adresei imediat
+
         self.__sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
         self.__bind_address = bind_addr                     #temp
         self.__sock.bind(bind_addr)
         self.__receiver_addr = receiver_addr

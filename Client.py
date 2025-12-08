@@ -61,7 +61,7 @@ class Client:
                     file_content = ""
                     for msg in self.__receiver.delivered:
                         file_content += msg.data
-                    reconstruct_file(file_content, file_name)
+                    reconstruct_file(file_content, f'{file_name}ClientSide')
 
                 case PacketType.DELETE:
                     # get file hierarchy
@@ -78,6 +78,11 @@ class Client:
                     self.__append_message(PacketType.DATA, dst)
                     self.__sender.set_content(self.__content)
                     self.__sender.start()
+
+                case PacketType.FOLDER:
+                    self.__sender.start()
+                    self.__receiver.start()
+                    # afisez
 
                 case PacketType.SETTINGS:
                     window_size = 0

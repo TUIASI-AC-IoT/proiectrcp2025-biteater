@@ -1,20 +1,13 @@
 
-import os
 import shutil
 
-from textual.events import Print
 
 from DivideFile import divide_file
 from Message import Message, PacketType
 from Receiver import Receiver
-from ReconstructFile import reconstruct_file, reconstruct_string
+from ReconstructFile import reconstruct_string
 from Sender import Sender
 from JsonFile import *
-
-# filename= "transmitor.txt"
-# filename_out="receiver.txt"
-# packet_list = divide_file(filename)
-# x = reconstruct_file(packet_list,filename_out)
 
 
 class Server:
@@ -91,6 +84,7 @@ class Server:
 
             with open(destination, "a") as destination_file:
                 destination_file.write(file_content)
+
 
 
 def main():
