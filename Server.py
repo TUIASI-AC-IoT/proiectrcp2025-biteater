@@ -67,10 +67,13 @@ class Server:
             if os.path.exists(file_path):
                 data_list = divide_file(file_path)
                 packet_list = [Message(PacketType.DATA, i, data_list[i]) for i in range(len(data_list))]
-                self.__sender.set_content(packet_list)
-                self.__sender.start()
+
             else:
                 print("The file does not exist")
+                packet_list = [Message(PacketType.DATA, 0,"!!! NO PROVIDED DATA !!!")]
+
+            self.__sender.set_content(packet_list)
+            self.__sender.start()
 
         if operation == PacketType.MOVE: # 1.[ ] 2. [source_file_name] 3.[destination_path]
             msg2 = self.__message.pop(0)
@@ -99,7 +102,7 @@ def main():
 
     # encode = encode_folder("File_Explorer")
     # tree = decode_folder(encode)
-    # print(json.dumps(tree, indent=4))
+    # print(json.dumps(tree,indent=4))
 
 
 
