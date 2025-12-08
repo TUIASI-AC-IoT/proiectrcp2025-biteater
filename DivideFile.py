@@ -13,4 +13,3 @@ def divide_file(filename):
             packet_list.append(content.decode())
             c+=1
     return packet_list
-
