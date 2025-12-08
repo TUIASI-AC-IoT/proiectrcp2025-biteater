@@ -43,6 +43,57 @@ This field is interpreted based on the preceding `PACKET_TYPE`:
 | **PACKET_TYPE 1 (ACK)**       | ACK | 10   | Confirms successful receipt of a packet. |
 | **PACKET_TYPE 2 (Data)**      | Data | 20   | Data packet. The first character of the DATA field **must be the packet's sequence number**. |
 
+## 🚀 Client Protocol Documentation
+
+This section describes the sequence of `Message` packets sent by the client for various operations, including file transfer and connection settings.
+
+The message structure is `Message(PacketType, SequenceNumber, Data)`.
+
+---
+
+### 📥 Core Operations
+
+| Operation | Packet Sequence                                       | Description | Example Data Format |
+| :--- |:------------------------------------------------------| :--- |:--------------------|
+| **Upload** | 0. `Message(PacketType.UPLOAD, 0, "")`                | Initiates the upload process. | N/A                 |
+| | 1. `Message(PacketType.DATA, 1, file_name)`           | Sends the name of the file. | `file_name`         |
+| | 2. `Message(PacketType.DATA, 2, file_content[0])`     | Sends the first chunk of file content. | `file_content[0]`   |
+| | ...                                                   | ... | ...                 |
+| | n+1. `Message(PacketType.DATA, n+1, file_content[n])` | Sends the last chunk of file content. | `file_content[n]`   |
+| **Download** | 0. `Message(PacketType.DOWNLOAD, 0, "")`              | Requests a file download. | N/A                 |
+| | 1. `Message(PacketType.DATA, 1, file_name)`           | Specifies the file to download. | `file_name`         |
+| **Delete** | 0. `Message(PacketType.DELETE, 0, "")`                | Requests file deletion. | N/A                 |
+| | 1. `Message(PacketType.DATA, 1, file_name)`           | Specifies the file to delete. | `file_name`         |
+| **Move** | 0. `Message(PacketType.MOVE, 0, "")`                  | Requests a file move/rename. | N/A                 |
+| | 1. `Message(PacketType.DATA, 1, file_format)`         | Specifies the source and destination paths. | `file_format`       |
+
+---
+
+### ⚙️ Sliding Window Settings
+
+To configure the underlying communication mechanism the following sequence is used:
+
+| Packet Sequence | Purpose | Data Format Specification | Example |
+| :--- | :--- | :--- | :--- |
+| 1. `Message(PacketType.SETTINGS, 0, "")` | Initiates the settings configuration. | N/A | N/A |
+| 2. `Message(PacketType.DATA, 1, window_format)` | Sets the **window size**. | `window_format := window_size(int)=val(int)` | `window_size(int)=12` |
+| 3. `Message(PacketType.DATA, 2, timeout_format)` | Sets the **retransmission timeout**. | `timeout_format := timeout(float)=val(float)` | `timeout(float)=0.3123` |
+
+---
+
+### 📝 Format Definitions
+
+* **Move Format:**
+    > `file_format := src|dst`
+    > (e.g. `/home/user/oldfile.txt|/home/user/new_location/newfile.txt`)
+
+* **Window Size Format:**
+    > `window_format := window_size(int)=val(int)`
+    > (e.g. `window_size(int)=12`)
+
+* **Timeout Format:**
+    > `timeout_format := timeout(float)=val(float)`
+    > (e.g. `timeout(float)=0.3123`)
 
 ### Example Packet Exchange (Fragment)
 
@@ -198,7 +249,38 @@ pip install textual
 
 ## Interactiunea dintre clasa Sender si Server
 ![Diagrama Arhitecturii](images/sender-server.png)
+## Client-Server Port Communication
+```mermaid
+flowchart LR
+    %% Stiluri pentru noduri
+    classDef client stroke:#01579b,stroke-width:2px;
+    classDef server stroke:#4a148c,stroke-width:2px;
 
+    subgraph CLIENT_SIDE [CLIENT]
+        direction TB
+        C_Sender("Sender<br>(Ascultă: 5000)<br>(Trimite către: 6000)"):::client
+        C_Receiver("Receiver<br>(Ascultă: 7000)<br>(Trimite către: 8000)"):::client
+    end
+
+    subgraph SERVER_SIDE [SERVER]
+        direction TB
+        S_Sender("Sender<br>(Ascultă: 8000)<br>(Trimite către: 7000)"):::server
+        S_Receiver("Receiver<br>(Ascultă: 6000)<br>(Trimite către: 5000)"):::server
+    end
+
+    %% Conexiunile (Săgețile din desen)
+    %% Client Sender trimite la Server Receiver pe 6000
+    C_Sender -- Port 6000 --> S_Receiver
+    
+    %% Server Receiver răspunde la Client Sender pe 5000
+    S_Receiver -- Port 5000 --> C_Sender
+
+    %% Server Sender trimite la Client Receiver pe 7000
+    S_Sender -- Port 7000 --> C_Receiver
+
+    %% Client Receiver răspunde la Server Sender pe 8000
+    C_Receiver -- Port 8000 --> S_Sender
+```
 ## Resources
 
 - [UDP](https://www.geeksforgeeks.org/computer-networks/user-datagram-protocol-udp/)

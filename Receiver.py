@@ -1,5 +1,6 @@
 from threading import Event
-from socket import socket, AF_INET, SOCK_DGRAM
+import socket
+# from socket import AF_INET, SOCK_DGRAM
 from Constant import Constant
 from Message import PacketType, Message
 
@@ -9,7 +10,9 @@ RECEIVER_ADDR = ("127.0.0.1", 6000)
 class Receiver:
     def __init__(self, bind_addr=RECEIVER_ADDR, sender_addr=SENDER_ADDR):
 
-        self.__sock = socket(AF_INET,SOCK_DGRAM)
+        self.__sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+        # Permite refolosirea adresei imediat
+        self.__sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.__sock.bind(bind_addr)
         self.__sender_addr = sender_addr
         self.__running: Event = Event()
@@ -27,6 +30,7 @@ class Receiver:
 
     def start(self):
         print("Receiver started")
+        self.delivered.clear()
         self.__running.set()
         self.__receive_loop()
 

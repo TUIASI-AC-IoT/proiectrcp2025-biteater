@@ -1,14 +1,21 @@
 from Message import PacketType, Message
 from Receiver import Receiver
 from Sender import Sender
+from DivideFile import divide_file
+from ReconstructFile import reconstruct_file
 
 class Client:
     window_str = "window_size(int)="
     timeout_str = "timeout(float)="
+    sender_recv = ("127.0.0.1", 5000)
+    sender_send = ("127.0.0.1", 6000)
+    receiver_recv = ("127.0.0.1", 7000)
+    receiver_send = ("127.0.0.1", 8000)
+
 
     def __init__(self):
-        self.__sender = Sender()
-        self.__receiver = Receiver()
+        self.__sender = Sender(Client.sender_recv, Client.sender_send)
+        self.__receiver = Receiver(Client.receiver_recv, Client.receiver_send)
         self.__content: list[Message] = []
         self.__content_index = 0
 
@@ -29,7 +36,7 @@ class Client:
     def __main_loop(self):
         while True:
             resp: str = self.__show_menu()
-            # TODO: RESET self.__content = [] ??
+            self.__content.clear()
             self.__append_message(PacketType(resp))
 
             match PacketType(resp):
@@ -37,10 +44,12 @@ class Client:
                     # get file hierarchy
                     file_name: str = input("FileName(abs_path) =  ")
                     self.__append_message(PacketType.DATA, file_name)
-                    # content.append(file_content)
+                    self.__sender.start()
+                    file_content = divide_file(file_name)
+                    for i in range(len(file_content)):
+                        self.__append_message(file_content[i])
                     self.__sender.set_content(self.__content)
                     self.__sender.start()
-                    # self.__sender.join()
 
                 case PacketType.DOWNLOAD:
                     # get file hierarchy
@@ -48,9 +57,11 @@ class Client:
                     self.__append_message(PacketType.DATA, file_name)
                     self.__sender.set_content(self.__content)
                     self.__sender.start()
-                    # self.__sender.join()
-                    self.__receiver.start() # TODO: TO RESET inside receiver class [delivered] every time I call receiver
-                    # reconstruct_file(self.__receiver.delivered, file_name)
+                    self.__receiver.start()
+                    file_content = ""
+                    for msg in self.__receiver.delivered:
+                        file_content += msg.data
+                    reconstruct_file(file_content, file_name)
 
                 case PacketType.DELETE:
                     # get file hierarchy
@@ -58,17 +69,15 @@ class Client:
                     self.__append_message(PacketType.DATA, file_name)
                     self.__sender.set_content(self.__content)
                     self.__sender.start()
-                    # self.__sender.join()
 
                 case PacketType.MOVE:
                     # get file hierarchy
                     src: str = input("src(abs_path) =  ")
                     dst: str = input("dst(abs_path) =  ")
-                    data = src + '|' + dst
-                    self.__append_message(PacketType.DATA, data)
+                    self.__append_message(PacketType.DATA, src)
+                    self.__append_message(PacketType.DATA, dst)
                     self.__sender.set_content(self.__content)
                     self.__sender.start()
-                    # self.__sender.join()
 
                 case PacketType.SETTINGS:
                     window_size = 0
@@ -92,10 +101,10 @@ class Client:
                     self.__sender.start()
 
     def start(self):
-        pass
+        self.__main_loop()
 
 def main():
-    pass
+    Client().start()
 
 
 if __name__ == "__main__":
