@@ -213,6 +213,7 @@ class ClientGUI(App):
         self.__sender.set_content(self.__content)
         self.__sender.start()
 
+
     @auto_clear
     @work
     @on(Button.Pressed, "#download")
