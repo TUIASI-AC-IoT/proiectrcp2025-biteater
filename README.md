@@ -40,6 +40,7 @@ This field is interpreted based on the preceding `PACKET_TYPE`:
 |                               | Delete | 02   | Requests file deletion. |
 |                               | Move | 03   | Requests file movement. |
 |                               | Sliding Window settings | 04   | Used to configure sliding window parameters. |
+ |                               | Get Hierarchy | 05 | Request file hierarchy |
 | **PACKET_TYPE 1 (ACK)**       | ACK | 10   | Confirms successful receipt of a packet. |
 | **PACKET_TYPE 2 (Data)**      | Data | 20   | Data packet. The first character of the DATA field **must be the packet's sequence number**. |
 
@@ -66,7 +67,7 @@ The message structure is `Message(PacketType, SequenceNumber, Data)`.
 | | 1. `Message(PacketType.DATA, 1, file_name)`           | Specifies the file to delete. | `file_name`         |
 | **Move** | 0. `Message(PacketType.MOVE, 0, "")`                  | Requests a file move/rename. | N/A                 |
 | | 1. `Message(PacketType.DATA, 1, file_format)`         | Specifies the source and destination paths. | `file_format`       |
-
+| **Get Hierarchy** | 0. `Message(PacketType.HIERARCHY, 0, "")` | Request file hierarchy | |
 ---
 
 ### ⚙️ Sliding Window Settings
@@ -82,10 +83,6 @@ To configure the underlying communication mechanism the following sequence is us
 ---
 
 ### 📝 Format Definitions
-
-* **Move Format:**
-    > `file_format := src|dst`
-    > (e.g. `/home/user/oldfile.txt|/home/user/new_location/newfile.txt`)
 
 * **Window Size Format:**
     > `window_format := window_size(int)=val(int)`
@@ -136,7 +133,7 @@ This makes UDP ideal for **real-time** and **time-sensitive** applications, wher
 
 The project utilizes the **Sliding Window Protocol** specifically implemented as **Selective Repeat**.
 
-* **Selective Repeat:** Only lost or corrupted packets are retransmitte, not the entire window.
+* **Selective Repeat:** Only lost or corrupted packets are retransmitted, not the entire window.
 * **Settings:** Parameters like the **window size** and **Timeout** interval are configurable via the Server UI.
 
 ---
@@ -148,7 +145,7 @@ The application uses **Textual** to provide an interactive experience within the
 ### Client UI
 
 * **START:** Initializes the connection and displays the operation options.
-* **Operations:** `UPLOAD`, `DOWNLOAD`, `DELETE`, `MOVE FILE`.
+* **Operations:** `UPLOAD`, `DOWNLOAD`, `DELETE`, `MOVE FILE`, `SETTINGS`, `GET HIERARCHY`.
 * **Workflow:** Allows file selection from a local file explorer, receiving the file hierarchy from the server, and sending the updated file structure after moving/deleting files.
 * **Processing:** Displays progress status and logs of sent/received packets.
 
@@ -211,27 +208,27 @@ pip install -r requirements.txt
 pip install textual-dev
 ```
 
-5. **Run the application**
+5. **Run the application on web**
 
 Normal mode:
 
 ```bash
-textual run main.py
+textual serve Client.py
 ```
 
-To enter the developer mode (with print statements, events displayed and live css updates):
+### To enter the developer mode (with print statements, events displayed and live css updates): ###
 
 a. **Run in terminal 1**
 
 ```bash
-textual console
+textual console -x EVENTS -x SYSTEM
 ```
 
 
 b. **Run in terminal 2**
 
 ```bash
-textual run --dev main.py
+textual serve --dev Client.py
 ```
 
 The console is going to only listen to events happening in terminal 2 

@@ -13,3 +13,6 @@ class Constant(Enum):
     # '!I' = 4 bytes for Sequence Number (Unsigned Integer, Network Byte Order)
     HEADER_SIZE = struct.calcsize('!2sI')  # Should be 6 bytes (2 + 4)
     PACKET_SIZE = 32
+    WINDOW_STR = "window_size(int)="
+    TIMEOUT_STR = "timeout(float)="
+
