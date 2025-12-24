@@ -1,10 +1,10 @@
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import HorizontalGroup, Vertical, Horizontal
+from textual.containers import HorizontalGroup, Vertical, Horizontal, CenterMiddle
 from textual.message import Message
 from textual.screen import ModalScreen
 from textual.widget import Widget
-from textual.widgets import Tree, Input, Pretty, Label
+from textual.widgets import Tree, Input, Pretty, Label, Footer
 
 from Constant import Constant
 from CustomValidators import GoodWindowSize, GoodTimeout
@@ -46,7 +46,6 @@ class Selected(Message):
 
 
 class RemoteTree(Widget):
-
     def __init__(self, classes=None, server_data=None):
         super().__init__(classes=classes)
         self.__server_data = server_data if server_data else SERVER_DATA
@@ -97,20 +96,33 @@ class RemoteTree(Widget):
 
 
 class RemoteTreeScreen(ModalScreen[str]):
+    CSS_PATH = "./css/RemoteTreeScree.tcss"
+    BINDINGS = [
+        ("escape", "back", "Back")
+    ]
+
     def __init__(self, server_data=None):
         super().__init__()
         self.__server_data = server_data if server_data else SERVER_DATA
 
     def compose(self):
         yield RemoteTree(server_data=self.__server_data)
+        yield Footer()
 
     def on_selected(self, message: Selected) -> None:
         self.log(f"Entered on_selected method: dismiss({message.node_path})")
         self.dismiss(message.node_path)
 
+    def action_back(self):
+        self.log("Header [action_back()]\n")
+        self.dismiss("")
+
 
 class MoveScreen(ModalScreen[tuple[str, str]]):
-    CSS_PATH = "css/movescreen.tcss"
+    CSS_PATH = "css/MoveScreen.tcss"
+    BINDINGS = [
+        ("escape", "back", "Back")
+    ]
 
     def __init__(self, server_data=None):
         super().__init__()
@@ -129,6 +141,7 @@ class MoveScreen(ModalScreen[tuple[str, str]]):
                 with Vertical(classes="column"):
                     yield Label("Destination (Folders)")
                     yield RemoteTree(server_data=self.__server_data, classes="to_tree")
+        yield Footer()
 
     def update_status(self):
         """Helper method to update the UI label."""
@@ -162,9 +175,16 @@ class MoveScreen(ModalScreen[tuple[str, str]]):
         if self.__src and self.__dst:
             self.dismiss((self.__src, self.__dst))
 
+    def action_back(self):
+        self.log("Header [action_back()]\n")
+        self.dismiss(("", ""))
+
 
 class SettingsScreen(ModalScreen[tuple[int, float]]):
     CSS_PATH = "css/settingsscreen.tcss"
+    BINDINGS = [
+        ("escape", "back", "Back")
+    ]
 
     def __init__(self):
         super().__init__()
@@ -186,6 +206,7 @@ class SettingsScreen(ModalScreen[tuple[int, float]]):
             type="number"
         )
         yield Pretty("", id="timeout_log")
+        yield Footer()
 
     @on(Input.Changed, "#window_input")
     def check_window(self, event: Input.Changed) -> None:
@@ -217,3 +238,7 @@ class SettingsScreen(ModalScreen[tuple[int, float]]):
             w = int(w)
             t = float(t)
             self.dismiss((w, t))
+
+    def action_back(self):
+        self.log("Header [action_back()]\n")
+        self.dismiss((-1, -1.0))

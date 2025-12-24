@@ -2,6 +2,7 @@ from threading import Thread
 
 from textual import on, work
 from textual.app import App, ComposeResult
+from textual.containers import Center, CenterMiddle
 from textual.widgets import Footer, Button
 
 from Constant import Constant
@@ -141,6 +142,7 @@ def auto_clear(func):
 
 
 class ClientGUI(App):
+    CSS_PATH = "./css/Client.tcss"
     ENABLE_COMMAND_PALETTE = False
     BINDINGS = [
         ("d", "toggle_dark", "Toggle dark mode"),
@@ -168,12 +170,13 @@ class ClientGUI(App):
 
 
     def compose(self) -> ComposeResult:
-        yield Button("Get Hierarchy", id='get_hierarchy')
-        yield Button("Upload", id='upload')
-        yield Button("Download", id='download')
-        yield Button("Move", id='move')
-        yield Button("Delete", id='delete')
-        yield Button("Settings", id='settings')
+        with CenterMiddle():
+            yield Button("Get Hierarchy", id='get_hierarchy')
+            yield Button("Upload", id='upload')
+            yield Button("Download", id='download')
+            yield Button("Move", id='move')
+            yield Button("Delete", id='delete')
+            yield Button("Settings", id='settings')
         yield Footer()
 
 
@@ -204,14 +207,15 @@ class ClientGUI(App):
         file_path = await self.push_screen_wait(RemoteTreeScreen(self.__folder_structure))
 
         if ClientGUI.server_exists:
-            self.__append_message(PacketType.UPLOAD)
-            self.__append_message(PacketType.DATA, file_path)
-            self.__sender.start()
-            file_content = divide_file(file_path)
-            for i in range(len(file_content)):
-                self.__append_message(file_content[i])
-            self.__sender.set_content(self.__content)
-            self.__sender.start()
+            if file_path:
+                self.__append_message(PacketType.UPLOAD)
+                self.__append_message(PacketType.DATA, file_path)
+                self.__sender.start()
+                file_content = divide_file(file_path)
+                for i in range(len(file_content)):
+                    self.__append_message(file_content[i])
+                self.__sender.set_content(self.__content)
+                self.__sender.start()
 
 
     @auto_clear
@@ -224,13 +228,14 @@ class ClientGUI(App):
         file_path = await self.push_screen_wait(RemoteTreeScreen(self.__folder_structure))
 
         if ClientGUI.server_exists:
-            self.__append_message(PacketType.DOWNLOAD)
-            self.__append_message(PacketType.DATA, file_path)
-            self.__sender.set_content(self.__content)
-            self.__sender.start()
-            self.__receiver.start()
-            file_content = reconstruct_string(self.__receiver.delivered)
-            reconstruct_file(file_content, file_path)
+            if file_path:
+                self.__append_message(PacketType.DOWNLOAD)
+                self.__append_message(PacketType.DATA, file_path)
+                self.__sender.set_content(self.__content)
+                self.__sender.start()
+                self.__receiver.start()
+                file_content = reconstruct_string(self.__receiver.delivered)
+                reconstruct_file(file_content, file_path)
 
 
     @auto_clear
@@ -243,11 +248,12 @@ class ClientGUI(App):
         src, dst = await self.push_screen_wait(MoveScreen(self.__folder_structure))
         self.log(f"Header handle_move:\n src={src}, dst={dst}\n")
         if ClientGUI.server_exists:
-            self.__append_message(PacketType.MOVE)
-            self.__append_message(PacketType.DATA, src)
-            self.__append_message(PacketType.DATA, dst)
-            self.__sender.set_content(self.__content)
-            self.__sender.start()
+            if src and dst:
+                self.__append_message(PacketType.MOVE)
+                self.__append_message(PacketType.DATA, src)
+                self.__append_message(PacketType.DATA, dst)
+                self.__sender.set_content(self.__content)
+                self.__sender.start()
 
 
     @auto_clear
@@ -260,10 +266,11 @@ class ClientGUI(App):
         file_path = await self.push_screen_wait(RemoteTreeScreen(self.__folder_structure))
 
         if ClientGUI.server_exists:
-            self.__append_message(PacketType.DELETE)
-            self.__append_message(PacketType.DATA, file_path)
-            self.__sender.set_content(self.__content)
-            self.__sender.start()
+            if file_path:
+                self.__append_message(PacketType.DELETE)
+                self.__append_message(PacketType.DATA, file_path)
+                self.__sender.set_content(self.__content)
+                self.__sender.start()
 
 
     @auto_clear
@@ -278,11 +285,12 @@ class ClientGUI(App):
         self.__receiver.set_window_size(window_size)
         # change the settings externally (server)
         if ClientGUI.server_exists:
-            self.__append_message(PacketType.SETTINGS)
-            self.__append_message(PacketType.DATA, Constant.WINDOW_STR.value + str(window_size))
-            self.__append_message(PacketType.DATA, Constant.TIMEOUT_STR.value + str(timeout))
-            self.__sender.set_content(self.__content)
-            self.__sender.start()
+            if window_size > 0 and timeout > 0.0:
+                self.__append_message(PacketType.SETTINGS)
+                self.__append_message(PacketType.DATA, Constant.WINDOW_STR.value + str(window_size))
+                self.__append_message(PacketType.DATA, Constant.TIMEOUT_STR.value + str(timeout))
+                self.__sender.set_content(self.__content)
+                self.__sender.start()
 
 
     def action_toggle_dark(self):
