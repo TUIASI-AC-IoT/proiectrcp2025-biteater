@@ -8,6 +8,18 @@ The main objective is to demonstrate the ability to construct a virtual "reliabl
 
 ---
 
+
+## Demo
+Main Menu
+<img src="https://github.com/user-attachments/assets/538deaba-878d-4162-8961-2bb48879223c" width="500"><br/>
+Settings Menu
+<img src="https://github.com/user-attachments/assets/ce2714db-3f9a-4953-9862-477e3ebc5927" width="500"> <br/>
+Move Menu
+<img src="https://github.com/user-attachments/assets/96df28b0-9987-4079-87f4-cb159337e1af" width="500"><br/>
+Upload Menu
+<img src="https://github.com/user-attachments/assets/39350811-a93a-4310-b21d-c07ceeec460b" width="500"><br/>
+---
+
 ## 📦 Packet Structure (Message Format)
 
 All communications between the Client and Server use a strictly defined packet structure (UDP datagrams):
