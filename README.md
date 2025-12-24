@@ -9,15 +9,15 @@ The main objective is to demonstrate the ability to construct a virtual "reliabl
 ---
 
 
-## Demo
-Main Menu<br/>
-<img src="https://github.com/user-attachments/assets/538deaba-878d-4162-8961-2bb48879223c" width="500"><br/>
-Settings Menu<br/>
-<img src="https://github.com/user-attachments/assets/ce2714db-3f9a-4953-9862-477e3ebc5927" width="500"> <br/>
-Move Menu<br/>
-<img src="https://github.com/user-attachments/assets/96df28b0-9987-4079-87f4-cb159337e1af" width="500"><br/>
-Upload Menu<br/>
-<img src="https://github.com/user-attachments/assets/39350811-a93a-4310-b21d-c07ceeec460b" width="500"><br/>
+## Demo<br/>
+Main Menu<br/><br/>
+<img width="800" height="600" alt="Image" src="https://github.com/user-attachments/assets/ac107e5f-7dde-4972-b0d5-1c3ca90e08db" /><br/><br/>
+Settings Menu<br/><br/>
+<img width="800" height="600" alt="Image" src="https://github.com/user-attachments/assets/c89d4c6b-97d1-404b-aef6-a73e658133cc" /><br/><br/>
+Move Menu<br/><br/>
+<img width="800" height="600" alt="Image" src="https://github.com/user-attachments/assets/bc1fe376-10a4-490c-86b5-b72334450897" /><br/><br/>
+Upload Menu<br/><br/>
+<img width="800" height="600" alt="Image" src="https://github.com/user-attachments/assets/138233b8-bed8-42ad-b331-c75e5de22e65" /><br/><br/>
 ---
 
 ## 📦 Packet Structure (Message Format)
@@ -295,4 +295,5 @@ flowchart LR
 - [UDP](https://www.geeksforgeeks.org/computer-networks/user-datagram-protocol-udp/)
 - [Textual Documentation](https://textual.textualize.io/)
 - [Textual GitHub Repository](https://github.com/Textualize/textual)
+
 
