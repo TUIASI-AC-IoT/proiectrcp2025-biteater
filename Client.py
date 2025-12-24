@@ -5,7 +5,7 @@ from textual.app import App, ComposeResult
 from textual.widgets import Footer, Button
 
 from Constant import Constant
-from CustomModalScreens import RemoteTreeScreen, SettingsScreen
+from CustomModalScreens import RemoteTreeScreen, SettingsScreen, MoveScreen
 from Message import Message, PacketType
 from Receiver import Receiver
 from ReconstructFile import reconstruct_string, reconstruct_file
@@ -21,7 +21,6 @@ class Client(Thread):
     sender_send = ("127.0.0.1", 6000)
     receiver_recv = ("127.0.0.1", 7000)
     receiver_send = ("127.0.0.1", 8000)
-
 
     def __init__(self):
         super().__init__()
@@ -95,7 +94,6 @@ class Client(Thread):
                     self.__receiver.start()                             # receptionez structura folderului
                     print(self.__receiver.delivered)                    # afisez structura
 
-
                 case PacketType.SETTINGS:
                     window_size = 0
                     timeout = 0.0
@@ -142,8 +140,8 @@ def auto_clear(func):
     return wrapper
 
 
-
 class ClientGUI(App):
+    ENABLE_COMMAND_PALETTE = False
     BINDINGS = [
         ("d", "toggle_dark", "Toggle dark mode"),
         ("q", "quit", "Quit"),
@@ -152,6 +150,7 @@ class ClientGUI(App):
     sender_send = ("127.0.0.1", 6000)
     receiver_recv = ("127.0.0.1", 7000)
     receiver_send = ("127.0.0.1", 8000)
+    server_exists = False               # for debug purposes while server is off
 
     def __init__(self):
         super().__init__()
@@ -162,9 +161,11 @@ class ClientGUI(App):
         self.__content_index = 0
         self.__folder_structure = None
 
+
     def __append_message(self, tip: PacketType, data: str = ""):
         self.__content.append(Message(tip,  self.__content_index, data))
         self.__content_index += 1
+
 
     def compose(self) -> ComposeResult:
         yield Button("Get Hierarchy", id='get_hierarchy')
@@ -183,14 +184,12 @@ class ClientGUI(App):
         self.log("-"*100)
         self.log("show_folders button pressed")
         self.log("-"*100)
-        self.__append_message(PacketType.HIERARCHY)
-        self.__sender.start()
-        # receive folder structure
-        self.__receiver.start()
-        self.__folder_structure = reconstruct_string(self.__receiver.delivered)
-
-        # file_path = await self.push_screen_wait(RemoteTreeScreen(folder_structure))
-        # self.log(f"From show_folders I got this={file_path}")
+        if ClientGUI.server_exists:
+            self.__append_message(PacketType.HIERARCHY)
+            self.__sender.start()
+            # receive folder structure
+            self.__receiver.start()
+            self.__folder_structure = reconstruct_string(self.__receiver.delivered)
 
 
     # See this link for more details about push_screen_wait :)
@@ -204,14 +203,15 @@ class ClientGUI(App):
         self.log("-"*100)
         file_path = await self.push_screen_wait(RemoteTreeScreen(self.__folder_structure))
 
-        self.__append_message(PacketType.UPLOAD)
-        self.__append_message(PacketType.DATA, file_path)
-        self.__sender.start()
-        file_content = divide_file(file_path)
-        for i in range(len(file_content)):
-            self.__append_message(file_content[i])
-        self.__sender.set_content(self.__content)
-        self.__sender.start()
+        if ClientGUI.server_exists:
+            self.__append_message(PacketType.UPLOAD)
+            self.__append_message(PacketType.DATA, file_path)
+            self.__sender.start()
+            file_content = divide_file(file_path)
+            for i in range(len(file_content)):
+                self.__append_message(file_content[i])
+            self.__sender.set_content(self.__content)
+            self.__sender.start()
 
 
     @auto_clear
@@ -223,30 +223,31 @@ class ClientGUI(App):
         self.log("-"*100)
         file_path = await self.push_screen_wait(RemoteTreeScreen(self.__folder_structure))
 
-        self.__append_message(PacketType.DOWNLOAD)
-        self.__append_message(PacketType.DATA, file_path)
-        self.__sender.set_content(self.__content)
-        self.__sender.start()
-        self.__receiver.start()
-        file_content = reconstruct_string(self.__receiver.delivered)
-        reconstruct_file(file_content, file_path)
+        if ClientGUI.server_exists:
+            self.__append_message(PacketType.DOWNLOAD)
+            self.__append_message(PacketType.DATA, file_path)
+            self.__sender.set_content(self.__content)
+            self.__sender.start()
+            self.__receiver.start()
+            file_content = reconstruct_string(self.__receiver.delivered)
+            reconstruct_file(file_content, file_path)
 
 
-    # @auto_clear
-    # @work
-    # @on(Button.Pressed, "#move")
-    # async def handle_move(self):
-    #     self.log("-"*100)
-    #     self.log("move button pressed")
-    #     self.log("-"*100)
-    #
-    #     src: str = input("src(relative_to_root_path) =  ")
-    #     dst: str = input("dst(relative_to_root_path) =  ")
-    #     self.__append_message(PacketType.MOVE)
-    #     self.__append_message(PacketType.DATA, src)
-    #     self.__append_message(PacketType.DATA, dst)
-    #     self.__sender.set_content(self.__content)
-    #     self.__sender.start()
+    @auto_clear
+    @work
+    @on(Button.Pressed, "#move")
+    async def handle_move(self):
+        self.log("-"*100)
+        self.log("move button pressed")
+        self.log("-"*100)
+        src, dst = await self.push_screen_wait(MoveScreen(self.__folder_structure))
+        self.log(f"Header handle_move:\n src={src}, dst={dst}\n")
+        if ClientGUI.server_exists:
+            self.__append_message(PacketType.MOVE)
+            self.__append_message(PacketType.DATA, src)
+            self.__append_message(PacketType.DATA, dst)
+            self.__sender.set_content(self.__content)
+            self.__sender.start()
 
 
     @auto_clear
@@ -258,10 +259,11 @@ class ClientGUI(App):
         self.log("-"*100)
         file_path = await self.push_screen_wait(RemoteTreeScreen(self.__folder_structure))
 
-        self.__append_message(PacketType.DELETE)
-        self.__append_message(PacketType.DATA, file_path)
-        self.__sender.set_content(self.__content)
-        self.__sender.start()
+        if ClientGUI.server_exists:
+            self.__append_message(PacketType.DELETE)
+            self.__append_message(PacketType.DATA, file_path)
+            self.__sender.set_content(self.__content)
+            self.__sender.start()
 
 
     @auto_clear
@@ -275,11 +277,12 @@ class ClientGUI(App):
         self.__sender.set_window_size(window_size)
         self.__receiver.set_window_size(window_size)
         # change the settings externally (server)
-        self.__append_message(PacketType.SETTINGS)
-        self.__append_message(PacketType.DATA, Constant.WINDOW_STR.value + str(window_size))
-        self.__append_message(PacketType.DATA, Constant.TIMEOUT_STR.value + str(timeout))
-        self.__sender.set_content(self.__content)
-        self.__sender.start()
+        if ClientGUI.server_exists:
+            self.__append_message(PacketType.SETTINGS)
+            self.__append_message(PacketType.DATA, Constant.WINDOW_STR.value + str(window_size))
+            self.__append_message(PacketType.DATA, Constant.TIMEOUT_STR.value + str(timeout))
+            self.__sender.set_content(self.__content)
+            self.__sender.start()
 
 
     def action_toggle_dark(self):

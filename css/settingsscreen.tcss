@@ -1,0 +1,16 @@
+Input.-valid {
+    border: tall $success 60%;
+}
+Input.-valid:focus {
+    border: tall $success;
+}
+Input {
+    margin: 1 1;
+}
+Label {
+    margin: 1 2;
+}
+Pretty {
+    margin: 1 2;
+    visibility: hidden;
+}

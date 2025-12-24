@@ -1,0 +1,26 @@
+MoveScreen {
+    align: center middle;
+    background: rgba(0,0,0,0.7);
+}
+
+#dialog {
+    width: 80%;
+    height: 80%;
+    background: $surface;
+    border: thick $primary;
+    padding: 1;
+}
+
+.column {
+    width: 1fr;
+    height: 100%;
+    border: solid $accent;
+}
+
+Label {
+    width: 100%;
+    text-align: center;
+    background: $accent;
+    color: auto;
+    margin-bottom: 1;
+}

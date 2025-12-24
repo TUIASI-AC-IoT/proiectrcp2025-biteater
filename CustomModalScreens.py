@@ -1,7 +1,10 @@
 from textual import on
 from textual.app import ComposeResult
+from textual.containers import HorizontalGroup, Vertical, Horizontal
+from textual.message import Message
 from textual.screen import ModalScreen
-from textual.widgets import Tree, Input, Pretty
+from textual.widget import Widget
+from textual.widgets import Tree, Input, Pretty, Label
 
 from Constant import Constant
 from CustomValidators import GoodWindowSize, GoodTimeout
@@ -33,29 +36,33 @@ SERVER_DATA = {
 }
 
 
-class RemoteTreeScreen(ModalScreen[str]):
-    # CSS_PATH = "client.tcss"
-
-    def __init__(self, server_data = None):
+class Selected(Message):
+    """file selected message."""
+    def __init__(self, node_path: str, node_type: str, sender_widget: Widget) -> None:
+        self.node_path = node_path
+        self.node_type = node_type
+        self.sender_widget = sender_widget
         super().__init__()
-        if server_data is None:
-            self.server_data = SERVER_DATA
-        else:
-            self.server_data = server_data
 
+
+class RemoteTree(Widget):
+
+    def __init__(self, classes=None, server_data=None):
+        super().__init__(classes=classes)
+        self.__server_data = server_data if server_data else SERVER_DATA
 
     def compose(self):
-        yield Tree("Project Root", id="json_tree", )
-
+        yield Tree("Project Root", id="json_tree")
 
     def on_mount(self) -> None:
         tree = self.query_one("#json_tree", Tree)
-        tree.root.expand()
+        tree.show_root = False
 
         # Start the recursive build from the server data
         for child in SERVER_DATA["children"]:
             self.add_json_node(tree.root, child, parent_path='')
 
+        tree.root.expand()
 
     def add_json_node(self, parent_node, data, parent_path):
         """Recursively add nodes to the tree."""
@@ -65,7 +72,8 @@ class RemoteTreeScreen(ModalScreen[str]):
         full_path = f"{parent_path}/{name}"
         node_data = {
             "original_data": data,
-            "full_path": full_path
+            "full_path": full_path,
+            "type" : node_type
         }
         if node_type == "dir":
             # Add a branch (directory)
@@ -77,42 +85,91 @@ class RemoteTreeScreen(ModalScreen[str]):
         else:
             parent_node.add_leaf(name, data=node_data)
 
-
     def on_tree_node_selected(self, event: Tree.NodeSelected) -> None:
+        event.stop()  # Stop the internal tree event from bubbling further
         node_data = event.node.data
         if node_data:
             self.log("*" * 50)
             self.log(f"Selected file={node_data["full_path"]}\nThe node is={event.node}")
             self.log("*" * 50)
-            self.dismiss(node_data["full_path"])
+            msg = Selected(node_data["full_path"], node_data["type"], self)
+            self.post_message(msg)
 
+
+class RemoteTreeScreen(ModalScreen[str]):
+    def __init__(self, server_data=None):
+        super().__init__()
+        self.__server_data = server_data if server_data else SERVER_DATA
+
+    def compose(self):
+        yield RemoteTree(server_data=self.__server_data)
+
+    def on_selected(self, message: Selected) -> None:
+        self.log(f"Entered on_selected method: dismiss({message.node_path})")
+        self.dismiss(message.node_path)
+
+
+class MoveScreen(ModalScreen[tuple[str, str]]):
+    CSS_PATH = "css/movescreen.tcss"
+
+    def __init__(self, server_data=None):
+        super().__init__()
+        self.__server_data = server_data if server_data else SERVER_DATA
+        self.__src = ""
+        self.__dst = ""
+
+    def compose(self):
+        with Vertical(id="dialog"):
+            yield Label("Select Source File -> Destination Folder", id="status_lbl")
+            with Horizontal():
+                with Vertical(classes="column"):
+                    yield Label("Source (Files)")
+                    yield RemoteTree(server_data=self.__server_data, classes="from_tree")
+
+                with Vertical(classes="column"):
+                    yield Label("Destination (Folders)")
+                    yield RemoteTree(server_data=self.__server_data, classes="to_tree")
+
+    def update_status(self):
+        """Helper method to update the UI label."""
+        src_text = self.__src if self.__src else "None"
+        dst_text = self.__dst if self.__dst else "None"
+        self.query_one("#status_lbl", Label).update(f"Move: {src_text} -> {dst_text}")
+
+    def on_selected(self, message: Selected) -> None:
+        if message.sender_widget.has_class("from_tree"):
+
+            if message.node_type != "file":
+                self.notify("Please select a file to move!", severity="warning")
+                return
+            self.__src = message.node_path
+            self.log(f"Source set to: {self.__src}")
+            self.update_status()
+            self.check_done()
+
+        elif message.sender_widget.has_class("to_tree"):
+
+            if message.node_type != "dir":
+                self.notify("Please select a folder as destination!", severity="error")
+                return
+            self.__dst = message.node_path
+            self.log(f"Dest set to: {self.__dst}")
+            self.update_status()
+            self.check_done()
+
+    def check_done(self):
+        """If both are selected, return the result."""
+        if self.__src and self.__dst:
+            self.dismiss((self.__src, self.__dst))
 
 
 class SettingsScreen(ModalScreen[tuple[int, float]]):
-    CSS = """
-        Input.-valid {
-            border: tall $success 60%;
-        }
-        Input.-valid:focus {
-            border: tall $success;
-        }
-        Input {
-            margin: 1 1;
-        }
-        Label {
-            margin: 1 2;
-        }
-        Pretty {
-            margin: 1 2;
-            visibility: hidden;
-        }
-        """
+    CSS_PATH = "css/settingsscreen.tcss"
 
     def __init__(self):
         super().__init__()
         self.window_size_good = False
         self.timeout_good = False
-
 
     def compose(self) -> ComposeResult:
         yield Input(
@@ -130,18 +187,16 @@ class SettingsScreen(ModalScreen[tuple[int, float]]):
         )
         yield Pretty("", id="timeout_log")
 
-
     @on(Input.Changed, "#window_input")
     def check_window(self, event: Input.Changed) -> None:
         # Updating the UI to show the reasons why validation failed
         if not event.validation_result.is_valid:
-            self.query_one("#window_log",Pretty).update(event.validation_result.failure_descriptions)
-            self.query_one("#window_log",Pretty).styles.visibility = "visible"
+            self.query_one("#window_log", Pretty).update(event.validation_result.failure_descriptions)
+            self.query_one("#window_log", Pretty).styles.visibility = "visible"
             self.window_size_good = False
         else:
             self.query_one("#window_log", Pretty).styles.visibility = "hidden"
             self.window_size_good = True
-
 
     @on(Input.Changed, "#timeout_input")
     def check_input(self, event: Input.Changed) -> None:
@@ -159,7 +214,6 @@ class SettingsScreen(ModalScreen[tuple[int, float]]):
         if self.window_size_good and self.timeout_good:
             w = self.query_one("#window_input", Input).value
             t = self.query_one("#timeout_input", Input).value
-            w = int(t)
-            t = float(w)
+            w = int(w)
+            t = float(t)
             self.dismiss((w, t))
-
