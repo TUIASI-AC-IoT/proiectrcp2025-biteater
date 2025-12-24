@@ -101,12 +101,15 @@ class RemoteTreeScreen(ModalScreen[str]):
         ("escape", "back", "Back")
     ]
 
-    def __init__(self, server_data=None):
+    def __init__(self, title: str, server_data=None):
         super().__init__()
         self.__server_data = server_data if server_data else SERVER_DATA
+        self.__title = title
 
     def compose(self):
-        yield RemoteTree(server_data=self.__server_data)
+        with Vertical():
+            yield Label(self.__title)
+            yield RemoteTree(server_data=self.__server_data)
         yield Footer()
 
     def on_selected(self, message: Selected) -> None:
@@ -181,7 +184,7 @@ class MoveScreen(ModalScreen[tuple[str, str]]):
 
 
 class SettingsScreen(ModalScreen[tuple[int, float]]):
-    CSS_PATH = "css/settingsscreen.tcss"
+    CSS_PATH = "css/SettingsScreen.tcss"
     BINDINGS = [
         ("escape", "back", "Back")
     ]
@@ -192,20 +195,22 @@ class SettingsScreen(ModalScreen[tuple[int, float]]):
         self.timeout_good = False
 
     def compose(self) -> ComposeResult:
-        yield Input(
-            placeholder=Constant.WINDOW_STR.value,
-            validators=GoodWindowSize(),
-            id="window_input",
-            type="integer"
-        )
-        yield Pretty("", id="window_log")
-        yield Input(
-            placeholder=Constant.TIMEOUT_STR.value,
-            validators=GoodTimeout(),
-            id="timeout_input",
-            type="number"
-        )
-        yield Pretty("", id="timeout_log")
+        with Vertical():
+            yield Label("Settings")
+            yield Input(
+                placeholder=Constant.WINDOW_STR.value,
+                validators=GoodWindowSize(),
+                id="window_input",
+                type="integer"
+            )
+            yield Pretty("", id="window_log")
+            yield Input(
+                placeholder=Constant.TIMEOUT_STR.value,
+                validators=GoodTimeout(),
+                id="timeout_input",
+                type="number"
+            )
+            yield Pretty("", id="timeout_log")
         yield Footer()
 
     @on(Input.Changed, "#window_input")

@@ -5,6 +5,14 @@ RemoteTree {
     width: 1fr;
     height: 1fr;
     background: $surface;
-    border: solid $accent;
+    border: solid $primary;
     padding: 1;
+}
+
+Label {
+    width: 100%;
+    text-align: center;
+    background: $accent;
+    color: auto;
+    margin-bottom: 1;
 }

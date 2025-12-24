@@ -14,3 +14,10 @@ Pretty {
     margin: 1 2;
     visibility: hidden;
 }
+Label {
+    width: 100%;
+    text-align: center;
+    background: $accent;
+    color: auto;
+    margin-bottom: 1;
+}

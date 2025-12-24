@@ -204,7 +204,7 @@ class ClientGUI(App):
         self.log("-"*100)
         self.log("upload button pressed")
         self.log("-"*100)
-        file_path = await self.push_screen_wait(RemoteTreeScreen(self.__folder_structure))
+        file_path = await self.push_screen_wait(RemoteTreeScreen("Upload", self.__folder_structure))
 
         if ClientGUI.server_exists:
             if file_path:
@@ -225,7 +225,7 @@ class ClientGUI(App):
         self.log("-"*100)
         self.log("download button pressed")
         self.log("-"*100)
-        file_path = await self.push_screen_wait(RemoteTreeScreen(self.__folder_structure))
+        file_path = await self.push_screen_wait(RemoteTreeScreen("Download", self.__folder_structure))
 
         if ClientGUI.server_exists:
             if file_path:
@@ -263,7 +263,7 @@ class ClientGUI(App):
         self.log("-"*100)
         self.log("delete button pressed")
         self.log("-"*100)
-        file_path = await self.push_screen_wait(RemoteTreeScreen(self.__folder_structure))
+        file_path = await self.push_screen_wait(RemoteTreeScreen("Delete", self.__folder_structure))
 
         if ClientGUI.server_exists:
             if file_path:
