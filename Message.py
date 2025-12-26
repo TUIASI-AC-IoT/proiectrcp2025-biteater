@@ -9,6 +9,7 @@ class PacketType(Enum):
     DELETE ="02"
     MOVE = "03"
     SETTINGS = "04"
+    HIERARCHY = "05"
     ACK = "10"
     DATA = "20"
     END = "30"

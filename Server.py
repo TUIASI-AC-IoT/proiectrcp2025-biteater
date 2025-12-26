@@ -1,8 +1,6 @@
 
-import os
 import shutil
 
-from textual.events import Print
 
 from DivideFile import divide_file
 from Message import Message, PacketType
@@ -10,25 +8,22 @@ from Receiver import Receiver
 from ReconstructFile import reconstruct_string
 from Sender import Sender
 from JsonFile import *
+from threading import Thread
 
-# filename= "transmitor.txt"
-# filename_out="receiver.txt"
-# packet_list = divide_file(filename)
-# x = reconstruct_file(packet_list,filename_out)
-
-
-class Server:
+class Server(Thread):
     sender_recv = ("127.0.0.1", 8000)
     sender_send = ("127.0.0.1", 7000)
     receiver_recv = ("127.0.0.1", 6000)
     receiver_send = ("127.0.0.1", 5000)
 
     def __init__(self):
+        super().__init__()
+
         self.__receiver = Receiver(Server.receiver_recv, Server.receiver_send)
         self.__sender = Sender(Server.sender_recv, Server.sender_send)
         self.__message = []
 
-    def start(self):
+    def run(self):
         self.__receiver.start()
         self.__message = self.__receiver.get_ordered_packets()
 
@@ -86,19 +81,22 @@ class Server:
             else:
                 print("The file does not exist")
 
-        if operation == PacketType.UPLOAD:   # 1.[ ]  2. [file_name]  3.[content]
+        if operation == PacketType.UPLOAD:   # 1.[ ]  2. [file_name]
             msg2 = self.__message.pop(0)
-            msg3 = self.__message.pop(0)
+            self.__receiver.start()
+            # pachete de tip data mai departe
+            file_content = reconstruct_string(self.__receiver.delivered)
             destination = msg2.data
-            file_content = reconstruct_string(msg3)
 
             with open(destination, "a") as destination_file:
                 destination_file.write(file_content)
 
+        # TODO SETTINGS, FOLDER OPERATION
 
 def main():
     server = Server()
     server.start()
+    server.join()
 
     # encode = encode_folder("FileExplorerServer")
     # tree = decode_folder(encode)
