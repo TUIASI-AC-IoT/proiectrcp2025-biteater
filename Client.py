@@ -1,8 +1,11 @@
+import re
+
 from Message import PacketType, Message
 from Receiver import Receiver
 from Sender import Sender
 from DivideFile import divide_file
-from ReconstructFile import reconstruct_file
+from ReconstructFile import reconstruct_file, reconstruct_string
+
 
 class Client:
     window_str = "window_size(int)="
@@ -53,14 +56,14 @@ class Client:
 
                 case PacketType.DOWNLOAD:
                     # get file hierarchy
-                    file_name: str = input("FileName(abs_path) =  ")
+                    file_name: str = input("FileName(relative_to_root_path) =  ")
                     self.__append_message(PacketType.DATA, file_name)
                     self.__sender.set_content(self.__content)
                     self.__sender.start()
                     self.__receiver.start()
-                    file_content = ""
-                    for msg in self.__receiver.delivered:
-                        file_content += msg.data
+                    file_content = reconstruct_string(self.__receiver.delivered)
+
+                    file_name = re.sub(r'FileExplorerServer','FileExplorerClient',file_name)
                     reconstruct_file(file_content, file_name)
 
                 case PacketType.DELETE:

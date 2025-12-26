@@ -1,16 +1,22 @@
+import os
+
 from Constant import Constant
 
 
-def reconstruct_file(packet_list, filename):
-    print("Reconstructing file")
-    with open(filename, "wb") as fd:
-        c = 0
-        for packet in packet_list:
-            print(f"\tPACKET {c} -> {packet}")
 
-            fd.seek(Constant.PACKET_SIZE.value * c)
-            fd.write(packet)
-            c += 1
+def reconstruct_file(packet_content, filename):
+    print("Reconstructing file")
+    relative_path = ""
+    files = filename.split('/')
+    for i in range(0, len(files)-1):
+        relative_path += files[i] + '/'
+        if not os.path.exists(relative_path):
+            os.mkdir(relative_path)
+
+    with open(filename, "wb") as fd:
+        # fd.seek(Constant.PACKET_SIZE.value * c)
+        fd.write(packet_content.encode('utf-8'))
+
 
 
 def reconstruct_string(packet_list) -> str:

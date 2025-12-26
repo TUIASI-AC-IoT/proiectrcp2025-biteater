@@ -7,7 +7,7 @@ from textual.events import Print
 from DivideFile import divide_file
 from Message import Message, PacketType
 from Receiver import Receiver
-from ReconstructFile import reconstruct_file, reconstruct_string
+from ReconstructFile import reconstruct_string
 from Sender import Sender
 from JsonFile import *
 
@@ -34,15 +34,15 @@ class Server:
 
 
         #             #simulare primire mesaj
-        # file_path = "File_Explorer/dir1/file2.txt"
-        # destination_path = "File_Explorer/dir2"
+        # file_path = "FileExplorerServer/dir1/file2.txt"
+        # destination_path = "FileExplorerServer/dir2"
         # self.__message.append(Message(packet_type=PacketType.MOVE,sequence=0,data=file_path))
         # self.__message.append(Message(packet_type=PacketType.DELETE,sequence=0,data=destination_path))
         #
         # #UPLOAD
-        # file_path = "File_Explorer/dir1/file1.txt"
+        # file_path = "FileExplorerServer/dir1/file1.txt"
         # content = "HELLO WORLD"
-        # destination_path = "File_Explorer/dir2"
+        # destination_path = "FileExplorerServer/dir2"
         # self.__message.append(Message(packet_type=PacketType.UPLOAD,sequence=0,data=file_path))
         # self.__message.append(Message(packet_type=PacketType.DELETE,sequence=0,data=content))
         self.process_message()
@@ -100,7 +100,7 @@ def main():
     server = Server()
     server.start()
 
-    # encode = encode_folder("File_Explorer")
+    # encode = encode_folder("FileExplorerServer")
     # tree = decode_folder(encode)
     # print(json.dumps(tree,indent=4))
 
