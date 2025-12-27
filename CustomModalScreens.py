@@ -170,7 +170,7 @@ class MoveScreen(ModalScreen[tuple[str, str]]):
 
         elif message.sender_widget.has_class("to_tree"):
 
-            if message.node_type != "dir":
+            if message.node_type != "folder":
                 self.notify("Please select a folder as destination!", severity="error")
                 return
             self.__dst = message.node_path

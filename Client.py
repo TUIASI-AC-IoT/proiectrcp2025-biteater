@@ -118,7 +118,7 @@ class ClientGUI(App):
                 # This code runs on the main thread after the sender is done
                 file_content = divide_file(str(Constant.CLIENT_FOLDER_PATH.value) + file_path)
                 for i in range(len(file_content)):
-                    self.__append_message(file_content[i])
+                    self.__append_message(PacketType.DATA, file_content[i])
                 self.__sender.set_content(self.__content)
 
                 if not self.__stop_all:

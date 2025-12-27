@@ -58,7 +58,9 @@ class Sender:
         self.__running.set()
 
         # we do not wait for it's termination (daemon = True), it is automatically terminated
-        __ack_thread = Thread(target=self.__receive_acks, daemon=True)
+        __ack_thread = Thread(target=self.__receive_acks, daemon=True) # WHY here and not in __init__() ?
+        # because, we want to reuse the same object Sender and when reusing you can't start a thread
+        # that was previously terminated
         __ack_thread.start()
         self.__send_loop()
 
@@ -121,7 +123,6 @@ class Sender:
                         self.__running.clear()
 
     def __send_packet(self, seq: int):
-
         message = self.__content[seq]
         if random() > Constant.LOSS_PROB.value:              # simulate packet loss
             self.__sock.sendto(message.serialize(), self.__receiver_addr)
