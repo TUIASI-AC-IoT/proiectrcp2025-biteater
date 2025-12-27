@@ -1,3 +1,4 @@
+import select
 from random import random
 from time import sleep
 from threading import Thread, Timer, Event, RLock
@@ -10,18 +11,14 @@ RECEIVER_ADDR = ("127.0.0.1", 6000)
 content_ = ["anna", "belly", "card", "dima", "elisei", "frate", "gica", "hrean", "zoo"]
 content__ = [Message(PacketType.DATA, i, content_[i]) if i != 0 else Message(PacketType.DELETE, i, content_[i])  for i in range(0, len(content_)) ]
 
-class Sender(Thread):
-    def __init__(self, bind_addr=SENDER_ADDR, receiver_addr=RECEIVER_ADDR):
+class Sender:
+    def __init__(self, bind_addr=SENDER_ADDR, receiver_addr=RECEIVER_ADDR) -> None:
 
-        super().__init__(daemon = True)
         self.__content: list[Message] = []
-        self.__sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        # Permite refolosirea adresei imediat
 
-        self.__sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.__sock: socket.socket | None = None
 
-        self.__bind_address = bind_addr                     #temp
-        self.__sock.bind(bind_addr)
+        self.__bind_address : str           = bind_addr
         self.__receiver_addr = receiver_addr
         self.__window_size = Constant.WINDOW_SIZE.value
         self.__timeout = Constant.PACKET_TIMEOUT.value
@@ -33,16 +30,15 @@ class Sender(Thread):
         self.__timers = {}                                # seq -> Timer
 
         self.__total_packets = len(self.__content)
-        # we do not wait for it's termination (daemon = True), it is automatically terminated
-        self.__ack_thread = Thread(target=self.__receive_acks, daemon=True)
 
-    def set_timeout(self, timeout: float):
+
+    def set_timeout(self, timeout: float) -> None:
         self.__timeout = timeout
 
-    def set_window_size(self, window_size: int):
+    def set_window_size(self, window_size: int) -> None:
         self.__window_size = window_size
 
-    def set_content(self, content):
+    def set_content(self, content) -> None:
         self.__content = content
         self.__current_packet = 0                         # pachetul curent care se transmite
         self.__left_window_margin = 0                     # indica indexul din stanga a ferestrei glisante
@@ -50,12 +46,22 @@ class Sender(Thread):
         self.__timers.clear()
         self.__total_packets = len(self.__content)
 
-    def run(self):
+    def start(self) -> None:
         print("Sender is starting...")
+        # initialization moved from __init__
+        # because I want to work again with the self.__sock after I closed it in previous iteration
+        self.__sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # Permite refolosirea adresei imediat
+        self.__sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.__sock.bind(self.__bind_address)
+
         self.__running.set()
-        self.__sock.settimeout(Constant.SOCK_TIMEOUT.value)
-        self.__ack_thread.start()
+
+        # we do not wait for it's termination (daemon = True), it is automatically terminated
+        __ack_thread = Thread(target=self.__receive_acks, daemon=True)
+        __ack_thread.start()
         self.__send_loop()
+
 
 
     def stop(self):
@@ -63,15 +69,25 @@ class Sender(Thread):
         with self.__lock:
             for t in self.__timers.values():
                 t.cancel()
-        self.__sock.close()
+        if self.__sock:
+            self.__sock.close()
+        self.__content.clear()
+        print("Sender stopped")
 
 
-    def __receive_acks(self):
+    def __receive_acks(self) -> None:
         while self.__running.is_set():
-            try:
-                raw_data, addr = self.__sock.recvfrom(Constant.PACKET_SIZE.value)
-            except OSError: # settimeout() raises this exception
-                sleep(0.5)
+            ready, _, _ = select.select([self.__sock], [], [], Constant.SOCK_TIMEOUT.value)
+
+            if ready:
+                try:
+                    raw_data, addr = self.__sock.recvfrom(Constant.PACKET_SIZE.value)
+                except OSError:
+                    # WHEN? Occurs when I call "stop" from the ClientGUI class but recvfrom is still running
+                    # but, I can not close the socket if it is still running, here comes the exception
+                    return
+            else: # timeout occurred from select
+                sleep(0.1)
                 continue
 
             message = Message.deserialize(raw_data)
@@ -88,8 +104,9 @@ class Sender(Thread):
                         try:
                             self.__timers[message.sequence].cancel()
                             del self.__timers[message.sequence]
-                        except KeyError:
+                        except KeyError as e:
                             print(f"Failed to delete or cancel the {message.sequence} timer")
+                            print("Error description: ", e)
 
                         # we can receive the acks in whichever order so:
                         while self.__left_window_margin in self.__acked_packets:
@@ -106,12 +123,10 @@ class Sender(Thread):
     def __send_packet(self, seq: int):
 
         message = self.__content[seq]
-        try:
-            if random() > Constant.LOSS_PROB.value:              # simulate packet loss
-                self.__sock.sendto(message.serialize(), self.__receiver_addr)
-            self.__start_timer(seq)
-        except OSError as e: # occurs because of sock.settimeout()
-            print(f"[Sender] Failed to send data for seq={seq}: {e}")
+        if random() > Constant.LOSS_PROB.value:              # simulate packet loss
+            self.__sock.sendto(message.serialize(), self.__receiver_addr)
+        self.__start_timer(seq)
+
 
     def __send_loop(self):
         while self.__running.is_set():

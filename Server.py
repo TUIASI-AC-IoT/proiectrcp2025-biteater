@@ -25,7 +25,6 @@ class Server(Thread):
 
     def run(self):
         self.__receiver.start()
-        self.__receiver.join()
 
         self.__message = self.__receiver.get_ordered_packets()
 
@@ -86,12 +85,11 @@ class Server(Thread):
         if operation == PacketType.UPLOAD:   # 1.[ ]  2. [file_name]
             msg2 = self.__message.pop(0)
             self.__receiver.start()
-            self.__receiver.join()
             # pachete de tip data mai departe
-            file_content = reconstruct_string(self.__receiver.delivered)
+            file_content = reconstruct_string(self.__receiver.get_ordered_packets())
             destination = msg2.data
 
-            with open(destination, "a") as destination_file:
+            with open("ByServer" + destination, "a") as destination_file:
                 destination_file.write(file_content)
 
         # TODO SETTINGS, FOLDER OPERATION
@@ -99,9 +97,8 @@ class Server(Thread):
 def main():
     server = Server()
     server.start()
-    server.join()
 
-    # encode = encode_folder("FileExplorerServer")
+    encode = encode_folder("FileExplorerServer")
     # tree = decode_folder(encode)
     # print(json.dumps(tree,indent=4))
 

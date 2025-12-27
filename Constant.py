@@ -15,4 +15,5 @@ class Constant(Enum):
     PACKET_SIZE = 32
     WINDOW_STR = "window_size(int)="
     TIMEOUT_STR = "timeout(float)="
-
+    CLIENT_FOLDER_PATH = "FileExplorerClient"
+    NO_DATA = "!!! NO PROVIDED DATA !!!"

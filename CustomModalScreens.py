@@ -11,17 +11,17 @@ from CustomValidators import GoodWindowSize, GoodTimeout
 
 SERVER_DATA = {
     "name": "root",
-    "type": "dir",
+    "type": "folder",
     "children": [
         {
             "name": "src",
-            "type": "dir",
+            "type": "folder",
             "children": [
                 {"name": "main.py", "type": "file"},
                 {"name": "utils.py", "type": "file"},
                 {
                     "name": "components",
-                    "type": "dir",
+                    "type": "folder",
                     "children": [
                         {"name": "header.py", "type": "file"},
                         {"name": "footer.py", "type": "file"},
@@ -29,7 +29,7 @@ SERVER_DATA = {
                 }
             ]
         },
-        {"name": "assets", "type": "dir", "children": []},
+        {"name": "assets", "type": "folder", "children": []},
         {"name": "config.json", "type": "file"},
         {"name": "README.md", "type": "file"},
     ]
@@ -58,31 +58,32 @@ class RemoteTree(Widget):
         tree.show_root = False
 
         # Start the recursive build from the server data
-        for child in SERVER_DATA["children"]:
+        for child in self.__server_data.get("children", []):
             self.add_json_node(tree.root, child, parent_path='')
 
         tree.root.expand()
 
     def add_json_node(self, parent_node, data, parent_path):
         """Recursively add nodes to the tree."""
-        name = data["name"]
-        node_type = data.get("type", "file")
+        node_name = data.get("name", "Unknown")
+        node_type = data.get("type", "undefined")
 
-        full_path = f"{parent_path}/{name}"
+        full_path = f"{parent_path}/{node_name}"
+
         node_data = {
             "original_data": data,
             "full_path": full_path,
             "type" : node_type
         }
-        if node_type == "dir":
+        if node_type == "folder":
             # Add a branch (directory)
             # allow_expand=False prevents opening empty folders
-            branch = parent_node.add(name, expand=False, data=node_data)
+            branch = parent_node.add(node_name, expand=False, data=node_data)
 
             for child in data.get("children", []):
                 self.add_json_node(branch, child, parent_path=full_path)
         else:
-            parent_node.add_leaf(name, data=node_data)
+            parent_node.add_leaf(node_name, data=node_data)
 
     def on_tree_node_selected(self, event: Tree.NodeSelected) -> None:
         event.stop()  # Stop the internal tree event from bubbling further
@@ -101,10 +102,11 @@ class RemoteTreeScreen(ModalScreen[str]):
         ("escape", "back", "Back")
     ]
 
-    def __init__(self, title: str, server_data=None):
+    def __init__(self, title: str, server_data=None, only_file = False):
         super().__init__()
         self.__server_data = server_data if server_data else SERVER_DATA
         self.__title = title
+        self.__only_file = only_file
 
     def compose(self):
         with Vertical():
@@ -114,7 +116,10 @@ class RemoteTreeScreen(ModalScreen[str]):
 
     def on_selected(self, message: Selected) -> None:
         self.log(f"Entered on_selected method: dismiss({message.node_path})")
-        self.dismiss(message.node_path)
+        if self.__only_file and not message.node_type == "file":
+            self.notify("Please select a file!", title=self.__title + " OPERATION", severity="warning")
+        else:
+            self.dismiss(message.node_path)
 
     def action_back(self):
         self.log("Header [action_back()]\n")
@@ -198,14 +203,14 @@ class SettingsScreen(ModalScreen[tuple[int, float]]):
         with Vertical():
             yield Label("Settings")
             yield Input(
-                placeholder=Constant.WINDOW_STR.value,
+                placeholder=str(Constant.WINDOW_STR.value),
                 validators=GoodWindowSize(),
                 id="window_input",
                 type="integer"
             )
             yield Pretty("", id="window_log")
             yield Input(
-                placeholder=Constant.TIMEOUT_STR.value,
+                placeholder=str(Constant.TIMEOUT_STR.value),
                 validators=GoodTimeout(),
                 id="timeout_input",
                 type="number"

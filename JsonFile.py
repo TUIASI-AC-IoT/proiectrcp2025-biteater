@@ -3,7 +3,7 @@ import os
 
 
 def folder_to_dict(folder_path: str) -> dict:
-    tree = {"name" : os.path.basename(folder_path),"type" : "folder","children" : []}
+    tree = {"name" : os.path.basename(folder_path),"type" : "folder", "children" : []}
 
     for item in os.listdir(folder_path):
         full_path = os.path.join(folder_path, item)

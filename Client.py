@@ -1,5 +1,5 @@
 import asyncio
-from threading import Thread
+import concurrent.futures
 
 from textual import on, work
 from textual.app import App, ComposeResult
@@ -8,138 +8,16 @@ from textual.widgets import Footer, Button
 
 from Constant import Constant
 from CustomModalScreens import RemoteTreeScreen, SettingsScreen, MoveScreen
+from JsonFile import folder_to_dict
 from Message import Message, PacketType
 from Receiver import Receiver
 from ReconstructFile import reconstruct_string, reconstruct_file
 from Sender import Sender
 from DivideFile import divide_file
-from functools import wraps
 
 
-class Client(Thread):
-    window_str = "window_size(int)="
-    timeout_str = "timeout(float)="
-    sender_recv = ("127.0.0.1", 5000)
-    sender_send = ("127.0.0.1", 6000)
-    receiver_recv = ("127.0.0.1", 7000)
-    receiver_send = ("127.0.0.1", 8000)
-
-    def __init__(self):
-        super().__init__()
-
-        self.__sender = Sender(Client.sender_recv, Client.sender_send)
-        self.__receiver = Receiver(Client.receiver_recv, Client.receiver_send)
-        self.__content: list[Message] = []
-        self.__content_index = 0
-
-    @staticmethod
-    def __show_menu() -> str:
-        print("Select your command: ")
-        print("00: Upload")
-        print("01: Download")
-        print("02: Delete")
-        print("03: Move")
-        print("04: Slinding Window Settings")
-        resp: str = input()
-        return resp
-
-    def __append_message(self, tip: PacketType, data: str = ""):
-        self.__content.append(Message(tip,  self.__content_index, data))
-        self.__content_index += 1
-
-    def __main_loop(self):
-        while True:
-            resp: str = self.__show_menu()
-            self.__content.clear()
-            self.__append_message(PacketType(resp))
-
-            match PacketType(resp):
-                case PacketType.UPLOAD:
-                    # get file hierarchy
-                    file_name: str = input("FileName(relative_to_root_path) =  ")
-                    self.__append_message(PacketType.DATA, file_name)
-                    self.__sender.start()
-                    file_content = divide_file(file_name)
-                    for i in range(len(file_content)):
-                        self.__append_message(file_content[i])
-                    self.__sender.set_content(self.__content)
-                    self.__sender.start()
-
-                case PacketType.DOWNLOAD:
-                    # get file hierarchy
-                    file_name: str = input("FileName(relative_to_root_path) =  ")
-                    self.__append_message(PacketType.DATA, file_name)
-                    self.__sender.set_content(self.__content)
-                    self.__sender.start()
-                    self.__receiver.start()
-                    file_content = reconstruct_string(self.__receiver.delivered)
-                    reconstruct_file(file_content, file_name)
-
-                case PacketType.DELETE:
-                    # get file hierarchy
-                    file_name: str = input("FileName(relative_to_root_path) =  ")
-                    self.__append_message(PacketType.DATA, file_name)
-                    self.__sender.set_content(self.__content)
-                    self.__sender.start()
-
-                case PacketType.MOVE:
-                    # get file hierarchy
-                    src: str = input("src(relative_to_root_path) =  ")
-                    dst: str = input("dst(relative_to_root_path) =  ")
-                    self.__append_message(PacketType.DATA, src)
-                    self.__append_message(PacketType.DATA, dst)
-                    self.__sender.set_content(self.__content)
-                    self.__sender.start()
-
-                case PacketType.HIERARCHY:
-                    self.__sender.start()                               # trimit request
-                    self.__receiver.start()                             # receptionez structura folderului
-                    print(self.__receiver.delivered)                    # afisez structura
-
-                case PacketType.SETTINGS:
-                    window_size = 0
-                    timeout = 0.0
-                    while True:
-                        try:
-                            window_size = int(input(Client.window_str))
-                            timeout = float(input(Client.timeout_str))
-                            if window_size > 0 and timeout > 0.0:
-                                break
-                        except ValueError: # when int() or float() fails
-                            continue
-                    # change the settings internally
-                    self.__sender.set_timeout(timeout)
-                    self.__sender.set_window_size(window_size)
-                    self.__receiver.set_window_size(window_size)
-                    # change the settings externally (server)
-                    self.__append_message(PacketType.DATA, Constant.WINDOW_STR.value + str(window_size))
-                    self.__append_message(PacketType.DATA, Constant.TIMEOUT_STR.value + str(timeout))
-                    self.__sender.set_content(self.__content)
-                    self.__sender.start()
-
-    def run(self):
-        self.__main_loop()
-
-# def main():
-#     client = Client()
-#     client.start()
-#     client.join()
-#
-#
-# if __name__ == "__main__":
-#     main()
-
-
-def auto_clear(func):
-    # Clears self.__content
-    @wraps(func) # Preserves the original function name
-    def wrapper(self, *args, **kwargs):
-        if hasattr(self, "__content"):
-            self.__content.clear()
-
-        return func(self, *args, **kwargs)
-
-    return wrapper
+def get_client_folder() -> dict:
+    return folder_to_dict(str(Constant.CLIENT_FOLDER_PATH.value))
 
 
 class ClientGUI(App):
@@ -147,6 +25,7 @@ class ClientGUI(App):
     ENABLE_COMMAND_PALETTE = False
     BINDINGS = [
         ("q", "quit", "Quit"),
+        ("s", "stop_operation", "Stop Operations")
     ]
     sender_recv = ("127.0.0.1", 5000)
     sender_send = ("127.0.0.1", 6000)
@@ -157,12 +36,14 @@ class ClientGUI(App):
     def __init__(self):
         super().__init__()
 
-        self.__sender = Sender(Client.sender_recv, Client.sender_send)
-        self.__receiver = Receiver(Client.receiver_recv, Client.receiver_send)
+        self.__sender = Sender(ClientGUI.sender_recv, ClientGUI.sender_send)
+        self.__receiver = Receiver(ClientGUI.receiver_recv, ClientGUI.receiver_send)
         self.__content: list[Message] = []
         self.__content_index = 0
-        self.__folder_structure = None
-
+        self.__folder_structure_server = None
+        self.__stop_all = False                 # when user press "s" we want to stop everything
+                                                # and not create any thread using asyncio.to_thread()
+                                                # we need this flag only for the second call of asyncio.to_thread()
 
     def __append_message(self, tip: PacketType, data: str = ""):
         self.__content.append(Message(tip,  self.__content_index, data))
@@ -183,75 +64,117 @@ class ClientGUI(App):
         yield Footer()
 
 
-    @auto_clear
     @work
     @on(Button.Pressed, "#get_hierarchy")
     async def handle_get_hierarchy(self):
+        self.query_one("#get_hierarchy", Button).loading = True
         self.log("-"*100)
-        self.log("show_folders button pressed")
+        self.log("get_hierarchy button pressed")
         self.log("-"*100)
         if ClientGUI.server_exists:
             self.__append_message(PacketType.HIERARCHY)
-            self.__sender.start()
+            self.__sender.set_content(self.__content)
+
+            ## Functions that runs in background
+            await asyncio.to_thread(self.__sender.start)
             # receive folder structure
-            self.__receiver.start()
-            await asyncio.to_thread(self.__receiver.join)
+
+            ## Functions that runs in background
+            if not self.__stop_all:
+                await asyncio.to_thread(self.__receiver.start)
+            else:
+                # if it was true, then I reset it
+                self.__stop_all = False
 
             # This code runs on the main thread after the receiver is done
-            self.__folder_structure = reconstruct_string(self.__receiver.delivered)
+            received_packets = self.__receiver.get_ordered_packets()
+            if received_packets:
+                self.__folder_structure_server = reconstruct_string(received_packets)
+            self.query_one("#get_hierarchy", Button).loading = False
 
 
     # See this link for more details about push_screen_wait :)
     # https://textual.textualize.io/guide/screens/#waiting-for-screens
-    @auto_clear
     @work
     @on(Button.Pressed, "#upload")
     async def handle_upload(self):
+        self.query_one("#upload", Button).loading = True
+
         self.log("-"*100)
         self.log("upload button pressed")
         self.log("-"*100)
-        file_path = await self.push_screen_wait(RemoteTreeScreen("Upload", self.__folder_structure))
+
+        file_path = await self.push_screen_wait(RemoteTreeScreen("Upload", get_client_folder(), True))
 
         if ClientGUI.server_exists:
             if file_path:
                 self.__append_message(PacketType.UPLOAD)
                 self.__append_message(PacketType.DATA, file_path)
-                self.__sender.start()
-                file_content = divide_file(file_path)
+                self.__sender.set_content(self.__content)
+
+                ## Functions that runs in background
+                await asyncio.to_thread(self.__sender.start)
+
+                # This code runs on the main thread after the sender is done
+                file_content = divide_file(str(Constant.CLIENT_FOLDER_PATH.value) + file_path)
                 for i in range(len(file_content)):
                     self.__append_message(file_content[i])
                 self.__sender.set_content(self.__content)
-                self.__sender.start()
+
+                if not self.__stop_all:
+                    ## Functions that runs in background
+                    await asyncio.to_thread(self.__sender.start)
+                else:
+                    # if it was true, then I reset it
+                    self.__stop_all = False
+
+        self.query_one("#upload", Button).loading = False
 
 
-    @auto_clear
+
     @work
     @on(Button.Pressed, "#download")
     async def handle_download(self):
+        self.query_one("#download", Button).loading = True
+
         self.log("-"*100)
         self.log("download button pressed")
         self.log("-"*100)
-        file_path = await self.push_screen_wait(RemoteTreeScreen("Download", self.__folder_structure))
+        file_path = await self.push_screen_wait(RemoteTreeScreen("Download", self.__folder_structure_server, True))
 
         if ClientGUI.server_exists:
             if file_path:
                 self.__append_message(PacketType.DOWNLOAD)
                 self.__append_message(PacketType.DATA, file_path)
                 self.__sender.set_content(self.__content)
-                self.__sender.start()
-                self.__receiver.start()
-                file_content = reconstruct_string(self.__receiver.delivered)
-                reconstruct_file(file_content, file_path)
+
+                ## Functions that runs in background
+                await asyncio.to_thread(self.__sender.start)
+
+                if not self.__stop_all:
+                    ## Functions that runs in background
+                    await asyncio.to_thread(self.__receiver.start)
+                else:
+                    # if it was true, then I reset it
+                    self.__stop_all = False
+
+                file_content: str = reconstruct_string(self.__receiver.get_ordered_packets())
+                if file_content == '' or file_content == Constant.NO_DATA.value:
+                    self.notify("Failed to download a file", title="DOWNLOAD OPERATION", severity="error")
+                else:
+                    reconstruct_file(file_content, file_path)
+
+        self.query_one("#download", Button).loading = False
 
 
-    @auto_clear
     @work
     @on(Button.Pressed, "#move")
     async def handle_move(self):
+        self.query_one("#move", Button).loading = True
         self.log("-"*100)
         self.log("move button pressed")
         self.log("-"*100)
-        src, dst = await self.push_screen_wait(MoveScreen(self.__folder_structure))
+        src, dst = await self.push_screen_wait(MoveScreen(self.__folder_structure_server))
         self.log(f"Header handle_move:\n src={src}, dst={dst}\n")
         if ClientGUI.server_exists:
             if src and dst:
@@ -259,30 +182,36 @@ class ClientGUI(App):
                 self.__append_message(PacketType.DATA, src)
                 self.__append_message(PacketType.DATA, dst)
                 self.__sender.set_content(self.__content)
-                self.__sender.start()
+
+                ## Functions that runs in background so app GUI can be refreshed
+                await asyncio.to_thread(self.__sender.start)
+        self.query_one("#move", Button).loading = False
 
 
-    @auto_clear
     @work
     @on(Button.Pressed, "#delete")
     async def handle_delete(self):
+        self.query_one("#delete", Button).loading = True
         self.log("-"*100)
         self.log("delete button pressed")
         self.log("-"*100)
-        file_path = await self.push_screen_wait(RemoteTreeScreen("Delete", self.__folder_structure))
+        file_path = await self.push_screen_wait(RemoteTreeScreen("Delete", self.__folder_structure_server, True))
 
         if ClientGUI.server_exists:
             if file_path:
                 self.__append_message(PacketType.DELETE)
                 self.__append_message(PacketType.DATA, file_path)
                 self.__sender.set_content(self.__content)
-                self.__sender.start()
+
+                ## Functions that runs in background
+                await asyncio.to_thread(self.__sender.start)
+        self.query_one("#delete", Button).loading = False
 
 
-    @auto_clear
     @work
     @on(Button.Pressed, "#settings")
     async def handle_settings(self):
+        self.query_one("#settings", Button).loading = True
         window_size, timeout = await self.push_screen_wait(SettingsScreen())
         self.log(f"w={window_size}, t={timeout}")
         # change the settings internally
@@ -293,16 +222,29 @@ class ClientGUI(App):
         if ClientGUI.server_exists:
             if window_size > 0 and timeout > 0.0:
                 self.__append_message(PacketType.SETTINGS)
-                self.__append_message(PacketType.DATA, Constant.WINDOW_STR.value + str(window_size))
-                self.__append_message(PacketType.DATA, Constant.TIMEOUT_STR.value + str(timeout))
+                self.__append_message(PacketType.DATA, str(Constant.WINDOW_STR.value) + str(window_size))
+                self.__append_message(PacketType.DATA, str(Constant.TIMEOUT_STR.value) + str(timeout))
                 self.__sender.set_content(self.__content)
-                self.__sender.start()
+
+                ## Functions that runs in background
+                await asyncio.to_thread(self.__sender.start)
+        self.query_one("#settings", Button).loading = False
+
+
+    def action_stop_operation(self):
+        """Called when the stop operation button is pressed."""
+        self.__sender.stop()
+        self.__receiver.stop()
+        self.__stop_all = True
+
 
     def action_quit(self):
         """Called when the quit button is pressed."""
         self.log("-"*100)
         self.log("quit button pressed")
         self.log("-"*100)
+        self.__sender.stop()
+        self.__receiver.stop()
         self.exit()
 
 
