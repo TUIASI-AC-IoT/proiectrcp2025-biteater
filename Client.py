@@ -1,3 +1,4 @@
+import asyncio
 from threading import Thread
 
 from textual import on, work
@@ -145,14 +146,13 @@ class ClientGUI(App):
     CSS_PATH = "./css/Client.tcss"
     ENABLE_COMMAND_PALETTE = False
     BINDINGS = [
-        ("d", "toggle_dark", "Toggle dark mode"),
         ("q", "quit", "Quit"),
     ]
     sender_recv = ("127.0.0.1", 5000)
     sender_send = ("127.0.0.1", 6000)
     receiver_recv = ("127.0.0.1", 7000)
     receiver_send = ("127.0.0.1", 8000)
-    server_exists = False               # for debug purposes while server is off
+    server_exists = True               # for debug purposes while server is off
 
     def __init__(self):
         super().__init__()
@@ -168,6 +168,9 @@ class ClientGUI(App):
         self.__content.append(Message(tip,  self.__content_index, data))
         self.__content_index += 1
 
+
+    def on_mount(self):
+        self.theme = "tokyo-night"
 
     def compose(self) -> ComposeResult:
         with CenterMiddle():
@@ -192,6 +195,9 @@ class ClientGUI(App):
             self.__sender.start()
             # receive folder structure
             self.__receiver.start()
+            await asyncio.to_thread(self.__receiver.join)
+
+            # This code runs on the main thread after the receiver is done
             self.__folder_structure = reconstruct_string(self.__receiver.delivered)
 
 
@@ -291,17 +297,6 @@ class ClientGUI(App):
                 self.__append_message(PacketType.DATA, Constant.TIMEOUT_STR.value + str(timeout))
                 self.__sender.set_content(self.__content)
                 self.__sender.start()
-
-
-    def action_toggle_dark(self):
-        """Called when the 'toggle dark' button is pressed."""
-        self.theme = (
-            "textual-dark" if self.theme == "textual-light" else "textual-light"
-        )
-        self.log("-"*100)
-        self.log("toggle_dark button pressed")
-        self.log("-"*100)
-
 
     def action_quit(self):
         """Called when the quit button is pressed."""

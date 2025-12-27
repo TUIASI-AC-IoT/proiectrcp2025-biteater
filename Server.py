@@ -25,6 +25,8 @@ class Server(Thread):
 
     def run(self):
         self.__receiver.start()
+        self.__receiver.join()
+
         self.__message = self.__receiver.get_ordered_packets()
 
 
@@ -84,6 +86,7 @@ class Server(Thread):
         if operation == PacketType.UPLOAD:   # 1.[ ]  2. [file_name]
             msg2 = self.__message.pop(0)
             self.__receiver.start()
+            self.__receiver.join()
             # pachete de tip data mai departe
             file_content = reconstruct_string(self.__receiver.delivered)
             destination = msg2.data

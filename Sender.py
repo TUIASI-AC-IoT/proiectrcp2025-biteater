@@ -10,10 +10,10 @@ RECEIVER_ADDR = ("127.0.0.1", 6000)
 content_ = ["anna", "belly", "card", "dima", "elisei", "frate", "gica", "hrean", "zoo"]
 content__ = [Message(PacketType.DATA, i, content_[i]) if i != 0 else Message(PacketType.DELETE, i, content_[i])  for i in range(0, len(content_)) ]
 
-class Sender:
-    def __init__(self, bind_addr=SENDER_ADDR,
-                 receiver_addr=RECEIVER_ADDR):
+class Sender(Thread):
+    def __init__(self, bind_addr=SENDER_ADDR, receiver_addr=RECEIVER_ADDR):
 
+        super().__init__(daemon = True)
         self.__content: list[Message] = []
         self.__sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         # Permite refolosirea adresei imediat
@@ -50,7 +50,7 @@ class Sender:
         self.__timers.clear()
         self.__total_packets = len(self.__content)
 
-    def start(self):
+    def run(self):
         print("Sender is starting...")
         self.__running.set()
         self.__sock.settimeout(Constant.SOCK_TIMEOUT.value)
@@ -169,6 +169,5 @@ def main():
     # sleep(0.1)
     sender.start()
 
-    sender.join()
 if __name__ == "__main__":
     main()
