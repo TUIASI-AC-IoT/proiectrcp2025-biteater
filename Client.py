@@ -1,5 +1,6 @@
 import asyncio
 import concurrent.futures
+from functools import wraps
 
 from textual import on, work
 from textual.app import App, ComposeResult
@@ -18,6 +19,7 @@ from DivideFile import divide_file
 
 def get_client_folder() -> dict:
     return folder_to_dict(str(Constant.CLIENT_FOLDER_PATH.value))
+
 
 
 class ClientGUI(App):
@@ -64,9 +66,15 @@ class ClientGUI(App):
         yield Footer()
 
 
+    def __reset_content(self):
+        self.__content.clear()
+        self.__content_index = 0
+
+
     @work
     @on(Button.Pressed, "#get_hierarchy")
     async def handle_get_hierarchy(self):
+        self.__reset_content()
         self.query_one("#get_hierarchy", Button).loading = True
         self.log("-"*100)
         self.log("get_hierarchy button pressed")
@@ -99,6 +107,7 @@ class ClientGUI(App):
     @on(Button.Pressed, "#upload")
     async def handle_upload(self):
         self.query_one("#upload", Button).loading = True
+        self.__reset_content()
 
         self.log("-"*100)
         self.log("upload button pressed")
@@ -131,11 +140,11 @@ class ClientGUI(App):
         self.query_one("#upload", Button).loading = False
 
 
-
     @work
     @on(Button.Pressed, "#download")
     async def handle_download(self):
         self.query_one("#download", Button).loading = True
+        self.__reset_content()
 
         self.log("-"*100)
         self.log("download button pressed")
@@ -171,6 +180,8 @@ class ClientGUI(App):
     @on(Button.Pressed, "#move")
     async def handle_move(self):
         self.query_one("#move", Button).loading = True
+        self.__reset_content()
+
         self.log("-"*100)
         self.log("move button pressed")
         self.log("-"*100)
@@ -192,6 +203,8 @@ class ClientGUI(App):
     @on(Button.Pressed, "#delete")
     async def handle_delete(self):
         self.query_one("#delete", Button).loading = True
+        self.__reset_content()
+
         self.log("-"*100)
         self.log("delete button pressed")
         self.log("-"*100)
@@ -212,6 +225,8 @@ class ClientGUI(App):
     @on(Button.Pressed, "#settings")
     async def handle_settings(self):
         self.query_one("#settings", Button).loading = True
+        self.__reset_content()
+
         window_size, timeout = await self.push_screen_wait(SettingsScreen())
         self.log(f"w={window_size}, t={timeout}")
         # change the settings internally

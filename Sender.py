@@ -89,7 +89,6 @@ class Sender:
                     # but, I can not close the socket if it is still running, here comes the exception
                     return
             else: # timeout occurred from select
-                sleep(0.1)
                 continue
 
             message = Message.deserialize(raw_data)

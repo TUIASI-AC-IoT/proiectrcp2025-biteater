@@ -23,7 +23,6 @@ class Receiver:
         self.expected_total = None
 
         self.buffer = {}  #sequence -> message
-
         self.__delivered = []
 
     def set_window_size(self, window_size: int):
@@ -99,13 +98,12 @@ class Receiver:
                         self.stop()
                 else:
                     # timeout occurred, no data to read
-                    time.sleep(0.1)
                     pass
 
             except OSError as e: # failed to receive anything
                 print("Error description from __receive_loop: ", e)
                 self.stop() # when I press "s" in main menu, get hierarchy operation stops
-            except Exception:
+            except Exception as e:
                 print("General Error|description from __receive_loop: ", e)
                 self.stop()
 
