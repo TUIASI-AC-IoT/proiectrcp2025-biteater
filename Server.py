@@ -10,7 +10,7 @@ from Sender import Sender
 from JsonFile import *
 from threading import Thread
 
-class Server(Thread):
+class Server:
     sender_recv = ("127.0.0.1", 8000)
     sender_send = ("127.0.0.1", 7000)
     receiver_recv = ("127.0.0.1", 6000)
@@ -23,12 +23,7 @@ class Server(Thread):
         self.__sender = Sender(Server.sender_recv, Server.sender_send)
         self.__message = []
 
-    def run(self):
-        self.__receiver.start()
-
-        self.__message = self.__receiver.get_ordered_packets()
-
-
+    def start(self):
         #             #simulare primire mesaj
         # file_path = "FileExplorerServer/dir1/file2.txt"
         # destination_path = "FileExplorerServer/dir2"

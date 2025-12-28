@@ -24,7 +24,7 @@ def decode_folder(json_string):
     return json.loads(json_string)
 
 def divide_json(json_dict : dict):
-    json_str = str(json_dict)
+    json_str = json.dumps(json_dict)
     # Constant.PACKET_SIZE.value
     packet_list = []
     c=0
@@ -35,5 +35,4 @@ def divide_json(json_dict : dict):
         packet_list.append(packet)
         i += Constant.PACKET_SIZE.value
         c += 1
-
     return packet_list

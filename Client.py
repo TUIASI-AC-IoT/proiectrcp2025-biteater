@@ -1,6 +1,4 @@
 import asyncio
-import concurrent.futures
-from functools import wraps
 
 from textual import on, work
 from textual.app import App, ComposeResult
@@ -15,7 +13,7 @@ from Receiver import Receiver
 from ReconstructFile import reconstruct_string, reconstruct_file
 from Sender import Sender
 from DivideFile import divide_file
-
+import json
 
 def get_client_folder() -> dict:
     return folder_to_dict(str(Constant.CLIENT_FOLDER_PATH.value))
@@ -76,9 +74,7 @@ class ClientGUI(App):
     async def handle_get_hierarchy(self):
         self.__reset_content()
         self.query_one("#get_hierarchy", Button).loading = True
-        self.log("-"*100)
-        self.log("get_hierarchy button pressed")
-        self.log("-"*100)
+
         if ClientGUI.server_exists:
             self.__append_message(PacketType.HIERARCHY)
             self.__sender.set_content(self.__content)
@@ -96,8 +92,17 @@ class ClientGUI(App):
 
             # This code runs on the main thread after the receiver is done
             received_packets = self.__receiver.get_ordered_packets()
-            if received_packets:
+            if len(received_packets) > 0:
                 self.__folder_structure_server = reconstruct_string(received_packets)
+                self.log(f"HIERARCHY: \n{self.__folder_structure_server}\n")
+            try:
+                res = json.loads(self.__folder_structure_server)
+            except json.JSONDecodeError as e:
+                self.log(e)
+            except Exception as e:
+                self.log(f"General:\n{e}")
+            else:
+                self.log(f"res=\n{res}")
             self.query_one("#get_hierarchy", Button).loading = False
 
 
@@ -108,10 +113,6 @@ class ClientGUI(App):
     async def handle_upload(self):
         self.query_one("#upload", Button).loading = True
         self.__reset_content()
-
-        self.log("-"*100)
-        self.log("upload button pressed")
-        self.log("-"*100)
 
         file_path = await self.push_screen_wait(RemoteTreeScreen("Upload", get_client_folder(), True))
 
@@ -237,8 +238,8 @@ class ClientGUI(App):
         if ClientGUI.server_exists:
             if window_size > 0 and timeout > 0.0:
                 self.__append_message(PacketType.SETTINGS)
-                self.__append_message(PacketType.DATA, str(Constant.WINDOW_STR.value) + str(window_size))
-                self.__append_message(PacketType.DATA, str(Constant.TIMEOUT_STR.value) + str(timeout))
+                self.__append_message(PacketType.DATA, str(window_size))
+                self.__append_message(PacketType.DATA, str(timeout))
                 self.__sender.set_content(self.__content)
 
                 ## Functions that runs in background
