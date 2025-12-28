@@ -2,8 +2,8 @@ from Constant import Constant
 from Message import Message, PacketType
 
 
-def divide_file(filename):
-    packet_list = []
+def divide_file(filename) -> list[str]:
+    packet_list: list[str] = []
     with open(filename, "rb") as fd:
         c=0
         while True:

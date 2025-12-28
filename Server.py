@@ -90,7 +90,7 @@ class Server:
 
         elif operation == PacketType.UPLOAD:   # 1.[ ]  2. [dst]
             msg2 = self.__message.pop(0)
-            #  0-n. [data]
+            #  0-N. [data]
             self.__receiver.start()
             # pachete de tip data mai departe
             file_content = reconstruct_string(self.__receiver.get_ordered_packets())

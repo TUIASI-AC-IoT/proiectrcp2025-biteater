@@ -1,8 +1,5 @@
 import os
 
-from Constant import Constant
-
-
 
 def reconstruct_file(packet_content, filename):
     print("Reconstructing file")
@@ -14,7 +11,6 @@ def reconstruct_file(packet_content, filename):
             os.mkdir(relative_path)
 
     with open(filename, "wb") as fd:
-        # fd.seek(Constant.PACKET_SIZE.value * c)
         fd.write(packet_content.encode('utf-8'))
 
 
