@@ -94,16 +94,16 @@ class ClientGUI(App):
             received_packets = self.__receiver.get_ordered_packets()
 
             if len(received_packets) > 0:
-                self.__folder_structure_server = reconstruct_string(received_packets)
-                self.log(f"HIERARCHY: \n{self.__folder_structure_server}\n")
+                # self.log([for packet in received_packets])
                 try:
-                    res = json.loads(self.__folder_structure_server)
+                    self.__folder_structure_server = json.loads(reconstruct_string(received_packets))
                 except json.JSONDecodeError as e:
                     self.log(f"Decode: {e}")
                 except Exception as e:
                     self.log(f"General:\n{e}")
                 else:
-                    self.log(f"res=\n{res}")
+                    self.log(f"res=\n{self.__folder_structure_server}")
+
                 self.query_one("#get_hierarchy", Button).loading = False
 
 
@@ -115,7 +115,7 @@ class ClientGUI(App):
         self.query_one("#upload", Button).loading = True
         self.__reset_content()
 
-        file_path = await self.push_screen_wait(RemoteTreeScreen("Upload", get_client_folder(), True))
+        file_path = await self.push_screen_wait(MoveScreen("Upload", get_client_folder()))
 
         if ClientGUI.server_exists:
             if file_path:

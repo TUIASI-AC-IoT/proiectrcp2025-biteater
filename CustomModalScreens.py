@@ -35,7 +35,6 @@ SERVER_DATA = {
     ]
 }
 
-
 class Selected(Message):
     """file selected message."""
     def __init__(self, node_path: str, node_type: str, sender_widget: Widget) -> None:
@@ -132,9 +131,11 @@ class MoveScreen(ModalScreen[tuple[str, str]]):
         ("escape", "back", "Back")
     ]
 
-    def __init__(self, server_data=None):
+    def __init__(self, server_data=None, client_data=None):
         super().__init__()
         self.__server_data = server_data if server_data else SERVER_DATA
+        self.__client_data = client_data if client_data else SERVER_DATA
+
         self.__src = ""
         self.__dst = ""
 

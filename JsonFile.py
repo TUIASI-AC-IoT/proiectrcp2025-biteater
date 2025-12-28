@@ -31,12 +31,13 @@ def divide_json(json_dict : dict):
     packet_index: int = 0
     string_pos: int = 0
 
+    max_data_size = Constant.PACKET_SIZE.value - Constant.HEADER_SIZE.value
+
     while string_pos < len(json_str):
-        sliced_json = json_str[string_pos : string_pos + Constant.PACKET_SIZE.value]
+        sliced_json = json_str[string_pos : string_pos + max_data_size]
         packet = Message(PacketType.DATA, packet_index, sliced_json)
         packet_list.append(packet)
-        string_pos += Constant.PACKET_SIZE.value
-        packet_index += 1
 
-    print(reconstruct_string(packet_list))
+        string_pos += max_data_size
+        packet_index += 1
     return packet_list

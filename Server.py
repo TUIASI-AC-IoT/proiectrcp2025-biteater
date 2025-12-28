@@ -99,8 +99,9 @@ class Server:
                 destination_file.write(file_content)
 
         elif operation == PacketType.HIERARCHY:  #1. []
-            folder:dict = folder_to_dict("FileExplorerServer")
-            json_packets:list[Message] = divide_json(folder)
+            folder: dict = folder_to_dict("FileExplorerServer")
+            json_packets: list[Message] = divide_json(folder)
+
             self.__sender.set_content(json_packets)
             self.__sender.start()
 

@@ -102,6 +102,7 @@ class Receiver:
 
                     # 6. Stop: we received END + all packets
                     if self.__expected_total is not None and self.__window_base >= self.__expected_total:
+                        print("Urmeaza packetele receptionate in ordine: ")
                         for packet in self.__delivered:
                             print(packet.data)
                         self.stop()

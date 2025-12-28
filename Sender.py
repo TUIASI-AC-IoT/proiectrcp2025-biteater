@@ -38,7 +38,7 @@ class Sender:
     def set_window_size(self, window_size: int) -> None:
         self.__window_size = window_size
 
-    def set_content(self, content) -> None:
+    def set_content(self, content: list[Message]) -> None:
         self.__content = content
         self.__current_packet = 0                         # pachetul curent care se transmite
         self.__left_window_margin = 0                     # indica indexul din stanga a ferestrei glisante
@@ -79,6 +79,7 @@ class Sender:
 
     def __receive_acks(self) -> None:
         while self.__running.is_set():
+
             ready, _, _ = select.select([self.__sock], [], [], Constant.SOCK_TIMEOUT.value)
 
             if ready:
