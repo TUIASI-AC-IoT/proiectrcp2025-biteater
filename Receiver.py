@@ -31,7 +31,7 @@ class Receiver:
         self.__window_size = window_size
 
     def start(self):
-        print("Receiver started")
+        print("\t******** Receiver started ********")
         self.delivered.clear()
         self.__running.set()
         self.__receive_loop()

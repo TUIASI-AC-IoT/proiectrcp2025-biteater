@@ -120,8 +120,11 @@ class Server(Thread):
             self.__sender.set_timeout(timeout)
 
     def stop(self):
-        self.__receiver.stop()
-        self.__sender.stop()
+        if self.__receiver:
+            self.__receiver.stop()
+        if self.__sender:
+            self.__sender.stop()
+
 def main():
 
     server = Server()

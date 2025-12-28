@@ -1,3 +1,5 @@
+import asyncio
+import os
 from threading import Thread
 
 from textual import on, work
@@ -147,6 +149,7 @@ class ClientGUI(App):
     BINDINGS = [
         ("d", "toggle_dark", "Toggle dark mode"),
         ("q", "quit", "Quit"),
+        ("ctrl+c","quit","Quit"),
     ]
     sender_recv = ("127.0.0.1", 5000)
     sender_send = ("127.0.0.1", 6000)
@@ -299,14 +302,12 @@ class ClientGUI(App):
     async def handle_settings(self):
         window_size, timeout = await self.push_screen_wait(SettingsScreen())
         self.log(f"w={window_size}, t={timeout}")
-        # change the settings internally
-        self.__sender.set_timeout(timeout)
-        self.__sender.set_window_size(window_size)
-        self.__receiver.set_window_size(window_size)
-        # change the settings externally (server)
         if ClientGUI.server_exists:
             self.reset_state()
             self.__sender = Sender(Client.sender_recv, Client.sender_send)
+            self.__sender.set_timeout(timeout)
+            self.__sender.set_window_size(window_size)
+            # self.__receiver.set_window_size(window_size)
             if window_size > 0 and timeout > 0.0:
                 self.__append_message(PacketType.SETTINGS)
                 # self.__append_message(PacketType.DATA, Constant.WINDOW_STR.value + str(window_size))
@@ -332,9 +333,25 @@ class ClientGUI(App):
         self.log("-"*100)
         self.log("quit button pressed")
         self.log("-"*100)
-        self.exit()
 
+        if self.__sender:
+            try:
+                self.__sender.stop()
+            except:
+                self.__sender = None
+        if self.__receiver:
+            try:
+                self.__receiver.stop()
+            except:
+                pass
+
+        self.exit()
+        os._exit(0)
 
 if __name__ == "__main__":
     app = ClientGUI()
-    app.run()
+    try:
+        app.run()
+    except KeyboardInterrupt:
+        # app.exit()
+        os._exit(0)
