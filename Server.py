@@ -36,10 +36,9 @@ class Server(Thread):
         # destination_path = "FileExplorerServer/dir2"
         # self.__message.append(Message(packet_type=PacketType.UPLOAD,sequence=0,data=file_path))
         # self.__message.append(Message(packet_type=PacketType.DELETE,sequence=0,data=content))
-
         while True:
             self.__receiver = Receiver(Server.receiver_recv, Server.receiver_send)
-            self.__receiver.start()
+            self.__receiver.start()  #blocant
             self.__message = self.__receiver.get_ordered_packets()
 
             if self.__message:
@@ -50,6 +49,8 @@ class Server(Thread):
                 except Exception as e:
                     print(e)
             print("Job done. Waiting for next command...")
+            self.__message = []
+
 
     def process_message(self):
         if not self.__message:
@@ -110,13 +111,13 @@ class Server(Thread):
             print("*********")
             msg2 = self.__message.pop(0)
             msg3 = self.__message.pop(0)
-            window_size = msg2.data
-            timeout = msg3.data
+            window_size = int(msg2.data)
+            timeout = float(msg3.data)
             print(window_size)
             print(timeout)
-            # self.__receiver.set_window_size(window_size)
-            # self.__sender.set_window_size(window_size)
-            # self.__sender.set_timeout(timeout)
+            self.__receiver.set_window_size(window_size)
+            self.__sender.set_window_size(window_size)
+            self.__sender.set_timeout(timeout)
 
     def stop(self):
         self.__receiver.stop()

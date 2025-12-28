@@ -180,7 +180,12 @@ class ClientGUI(App):
             yield Button("Settings", id='settings')
         yield Footer()
 
-
+    def reset_state(self):
+        self.__receiver = None
+        self.__sender = None
+        self.__content.clear()
+        self.__content_index = 0
+        self.__folder_structure = None
     @auto_clear
     @work
     @on(Button.Pressed, "#get_hierarchy")
@@ -189,6 +194,7 @@ class ClientGUI(App):
         self.log("show_folders button pressed")
         self.log("-"*100)
         if ClientGUI.server_exists:
+            self.reset_state()
             self.__sender = Sender(Client.sender_recv, Client.sender_send)
             self.__receiver = Receiver(Client.receiver_recv, Client.receiver_send)
             self.__append_message(PacketType.HIERARCHY)
@@ -211,6 +217,7 @@ class ClientGUI(App):
         file_path = await self.push_screen_wait(RemoteTreeScreen("Upload", self.__folder_structure))
 
         if ClientGUI.server_exists:
+            self.reset_state()
             self.__sender = Sender(Client.sender_recv, Client.sender_send)
             self.__receiver = Receiver(Client.receiver_recv, Client.receiver_send)
             if file_path:
@@ -234,6 +241,7 @@ class ClientGUI(App):
         file_path = await self.push_screen_wait(RemoteTreeScreen("Download", self.__folder_structure))
 
         if ClientGUI.server_exists:
+            self.reset_state()
             self.__sender = Sender(Client.sender_recv, Client.sender_send)
             self.__receiver = Receiver(Client.receiver_recv, Client.receiver_send)
             if file_path:
@@ -256,6 +264,7 @@ class ClientGUI(App):
         src, dst = await self.push_screen_wait(MoveScreen(self.__folder_structure))
         self.log(f"Header handle_move:\n src={src}, dst={dst}\n")
         if ClientGUI.server_exists:
+            self.reset_state()
             self.__sender = Sender(Client.sender_recv, Client.sender_send)
             if src and dst:
                 self.__append_message(PacketType.MOVE)
@@ -275,6 +284,7 @@ class ClientGUI(App):
         file_path = await self.push_screen_wait(RemoteTreeScreen("Delete", self.__folder_structure))
 
         if ClientGUI.server_exists:
+            self.reset_state()
             self.__sender = Sender(Client.sender_recv, Client.sender_send)
             if file_path:
                 self.__append_message(PacketType.DELETE)
@@ -295,11 +305,14 @@ class ClientGUI(App):
         self.__receiver.set_window_size(window_size)
         # change the settings externally (server)
         if ClientGUI.server_exists:
+            self.reset_state()
             self.__sender = Sender(Client.sender_recv, Client.sender_send)
             if window_size > 0 and timeout > 0.0:
                 self.__append_message(PacketType.SETTINGS)
-                self.__append_message(PacketType.DATA, Constant.WINDOW_STR.value + str(window_size))
-                self.__append_message(PacketType.DATA, Constant.TIMEOUT_STR.value + str(timeout))
+                # self.__append_message(PacketType.DATA, Constant.WINDOW_STR.value + str(window_size))
+                # self.__append_message(PacketType.DATA, Constant.TIMEOUT_STR.value + str(timeout))
+                self.__append_message(PacketType.DATA, str(window_size))
+                self.__append_message(PacketType.DATA,str(timeout))
                 self.__sender.set_content(self.__content)
                 self.__sender.start()
 
