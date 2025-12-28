@@ -88,9 +88,10 @@ class Server:
             else:
                 print("The file does not exist")
 
-        elif operation == PacketType.UPLOAD:   # 1.[ ]  2. [file_name] 3-n [data]
+        elif operation == PacketType.UPLOAD:   # 1.[ ]  2. [dst]
             msg2 = self.__message.pop(0)
-            # self.__receiver.start()
+            #  0-n. [data]
+            self.__receiver.start()
             # pachete de tip data mai departe
             file_content = reconstruct_string(self.__receiver.get_ordered_packets())
             destination = msg2.data

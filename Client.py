@@ -40,7 +40,7 @@ class ClientGUI(App):
         self.__receiver = Receiver(ClientGUI.receiver_recv, ClientGUI.receiver_send)
         self.__content: list[Message] = []
         self.__content_index = 0
-        self.__folder_structure_server = None
+        self.__folder_structure_server: dict | None = None
         self.__stop_all = False                 # when user press "s" we want to stop everything
                                                 # and not create any thread using asyncio.to_thread()
                                                 # we need this flag only for the second call of asyncio.to_thread()
@@ -94,9 +94,8 @@ class ClientGUI(App):
             received_packets = self.__receiver.get_ordered_packets()
 
             if len(received_packets) > 0:
-                # self.log([for packet in received_packets])
                 try:
-                    self.__folder_structure_server = json.loads(reconstruct_string(received_packets))
+                    self.__folder_structure_server: dict | None = json.loads(reconstruct_string(received_packets))
                 except json.JSONDecodeError as e:
                     self.log(f"Decode: {e}")
                 except Exception as e:
@@ -115,26 +114,36 @@ class ClientGUI(App):
         self.query_one("#upload", Button).loading = True
         self.__reset_content()
 
-        file_path = await self.push_screen_wait(MoveScreen("Upload", get_client_folder()))
+        src, dst = await self.push_screen_wait(MoveScreen(self.__folder_structure_server, get_client_folder() ))
 
         if ClientGUI.server_exists:
-            if file_path:
+            if src and dst:
+                temp: list[str] = src.split('/')
+                dst = str(Constant.SERVER_FOLDER_PATH.value) + dst + '/' + temp[len(temp) - 1]
+                src = str(Constant.CLIENT_FOLDER_PATH.value) + src
+                self.log(f"dst = {dst}")
+                self.log(f"src = {src}")
+
                 self.__append_message(PacketType.UPLOAD)
-                self.__append_message(PacketType.DATA, file_path)
+                self.__append_message(PacketType.DATA, dst)
                 self.__sender.set_content(self.__content)
 
                 ## Functions that runs in background
+                # Announce server about our intention to upload a file
                 await asyncio.to_thread(self.__sender.start)
+                self.__reset_content()
 
                 # This code runs on the main thread after
                 # the sender is done
-                file_content = divide_file(str(Constant.CLIENT_FOLDER_PATH.value) + file_path)
+
+                file_content = divide_file(src)
                 for i in range(len(file_content)):
                     self.__append_message(PacketType.DATA, file_content[i])
                 self.__sender.set_content(self.__content)
 
                 if not self.__stop_all:
                     ## Functions that runs in background
+                    self.log("REACHED SENDING")
                     await asyncio.to_thread(self.__sender.start)
                 else:
                     # if it was true, then I reset it
@@ -148,19 +157,20 @@ class ClientGUI(App):
     async def handle_download(self):
         self.query_one("#download", Button).loading = True
         self.__reset_content()
-
-        self.log("-"*100)
-        self.log("download button pressed")
-        self.log("-"*100)
-        file_path = await self.push_screen_wait(RemoteTreeScreen("Download", self.__folder_structure_server, True))
+        src, dst = await self.push_screen_wait(MoveScreen(get_client_folder(), self.__folder_structure_server))
 
         if ClientGUI.server_exists:
-            if file_path:
+            if src and dst:
+                src = str(Constant.SERVER_FOLDER_PATH.value) + src
+                temp: list[str] = src.split('/')
+                dst = str(Constant.CLIENT_FOLDER_PATH.value) + dst + '/' + temp[len(temp) - 1]
+
                 self.__append_message(PacketType.DOWNLOAD)
-                self.__append_message(PacketType.DATA, file_path)
+                self.__append_message(PacketType.DATA, src)
                 self.__sender.set_content(self.__content)
 
                 ## Functions that runs in background
+                # Announce server about our intention to download a file
                 await asyncio.to_thread(self.__sender.start)
 
                 if not self.__stop_all:
@@ -174,7 +184,7 @@ class ClientGUI(App):
                 if file_content == '' or file_content == Constant.NO_DATA.value:
                     self.notify("Failed to download a file", title="DOWNLOAD OPERATION", severity="error")
                 else:
-                    reconstruct_file(file_content, file_path)
+                    reconstruct_file(file_content, dst)
 
         self.query_one("#download", Button).loading = False
 
@@ -185,10 +195,10 @@ class ClientGUI(App):
         self.query_one("#move", Button).loading = True
         self.__reset_content()
 
-        self.log("-"*100)
-        self.log("move button pressed")
-        self.log("-"*100)
         src, dst = await self.push_screen_wait(MoveScreen(self.__folder_structure_server))
+        src = str(Constant.SERVER_FOLDER_PATH.value) + src
+        dst = str(Constant.SERVER_FOLDER_PATH.value) + dst
+
         self.log(f"Header handle_move:\n src={src}, dst={dst}\n")
         if ClientGUI.server_exists:
             if src and dst:
@@ -208,10 +218,8 @@ class ClientGUI(App):
         self.query_one("#delete", Button).loading = True
         self.__reset_content()
 
-        self.log("-"*100)
-        self.log("delete button pressed")
-        self.log("-"*100)
         file_path = await self.push_screen_wait(RemoteTreeScreen("Delete", self.__folder_structure_server, True))
+        file_path = str(Constant.SERVER_FOLDER_PATH.value) + file_path
 
         if ClientGUI.server_exists:
             if file_path:
@@ -258,9 +266,6 @@ class ClientGUI(App):
 
     def action_quit(self):
         """Called when the quit button is pressed."""
-        self.log("-"*100)
-        self.log("quit button pressed")
-        self.log("-"*100)
         self.__sender.stop()
         self.__receiver.stop()
         self.exit()

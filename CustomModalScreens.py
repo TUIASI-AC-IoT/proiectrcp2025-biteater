@@ -131,10 +131,10 @@ class MoveScreen(ModalScreen[tuple[str, str]]):
         ("escape", "back", "Back")
     ]
 
-    def __init__(self, server_data=None, client_data=None):
+    def __init__(self, server_data: dict | None =None, client_data: dict | None=None):
         super().__init__()
-        self.__server_data = server_data if server_data else SERVER_DATA
-        self.__client_data = client_data if client_data else SERVER_DATA
+        self.__server_data: dict | None = server_data if server_data else SERVER_DATA
+        self.__client_data: dict | None = client_data if client_data else None
 
         self.__src = ""
         self.__dst = ""
@@ -145,7 +145,11 @@ class MoveScreen(ModalScreen[tuple[str, str]]):
             with Horizontal():
                 with Vertical(classes="column"):
                     yield Label("Source (Files)")
-                    yield RemoteTree(server_data=self.__server_data, classes="from_tree")
+
+                    if self.__client_data:
+                        yield RemoteTree(server_data=self.__client_data, classes="from_tree")
+                    else:
+                        yield RemoteTree(server_data=self.__server_data, classes="from_tree")
 
                 with Vertical(classes="column"):
                     yield Label("Destination (Folders)")
