@@ -11,13 +11,17 @@ The main objective is to demonstrate the ability to construct a virtual "reliabl
 
 ## Demo<br/>
 Main Menu<br/><br/>
-<img width="800" height="600" alt="Image" src="https://github.com/user-attachments/assets/ac107e5f-7dde-4972-b0d5-1c3ca90e08db" /><br/><br/>
-Settings Menu<br/><br/>
-<img width="800" height="600" alt="Image" src="https://github.com/user-attachments/assets/c89d4c6b-97d1-404b-aef6-a73e658133cc" /><br/><br/>
-Move Menu<br/><br/>
-<img width="800" height="600" alt="Image" src="https://github.com/user-attachments/assets/bc1fe376-10a4-490c-86b5-b72334450897" /><br/><br/>
+<img width="800" height="600" alt="Image" src="https://github.com/user-attachments/assets/7ed54dec-fb5f-476a-9b7b-01746558ddef" /><br/><br/>
 Upload Menu<br/><br/>
-<img width="800" height="600" alt="Image" src="https://github.com/user-attachments/assets/138233b8-bed8-42ad-b331-c75e5de22e65" /><br/><br/>
+<img width="800" height="600" alt="Image" src="https://github.com/user-attachments/assets/19a53b3a-b58b-449c-ade2-b1c8401b853a" /><br/><br/>
+Download Menu<br/><br/>
+<img width="800" height="600" alt="Image" src="https://github.com/user-attachments/assets/d12493ab-0c3d-44df-b3c9-ccc97cc88ef8" /><br/><br/>
+Move Menu<br/><br/>
+<img width="800" height="600" alt="Image" src="https://github.com/user-attachments/assets/e5819121-8ace-4d38-8c01-736f49098696" /><br/><br/>
+Delete Menu<br/><br/>
+<img width="800" height="600" alt="Image" src="https://github.com/user-attachments/assets/010231c5-a85c-4d39-88fb-3e18520e409b" /><br/><br/>
+Settings Menu<br/><br/>
+<img width="800" height="600" alt="Image" src="https://github.com/user-attachments/assets/74b3e4e3-9005-4a9a-b94d-0ca076ff9c36" /><br/><br/>
 ---
 
 ## 📦 Packet Structure (Message Format)
