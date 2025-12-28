@@ -1,8 +1,8 @@
 from Constant import Constant
 
 
-def divide_file(filename):
-    packet_list = []
+def divide_file(filename) -> list[str]:
+    packet_list: list[str] = []
     with open(filename, "rb") as fd:
         c=0
         while True:

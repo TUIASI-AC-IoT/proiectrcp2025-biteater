@@ -55,7 +55,6 @@ class ClientGUI(App):
 
     def compose(self) -> ComposeResult:
         with CenterMiddle():
-            yield Button("Get Hierarchy", id='get_hierarchy')
             yield Button("Upload", id='upload')
             yield Button("Download", id='download')
             yield Button("Move", id='move')
@@ -69,23 +68,20 @@ class ClientGUI(App):
         self.__content_index = 0
 
 
-    @work
-    @on(Button.Pressed, "#get_hierarchy")
-    async def handle_get_hierarchy(self):
+    def handle_get_hierarchy(self):
         self.__reset_content()
-        self.query_one("#get_hierarchy", Button).loading = True
 
         if ClientGUI.server_exists:
             self.__append_message(PacketType.HIERARCHY)
             self.__sender.set_content(self.__content)
 
             ## Functions that runs in background
-            await asyncio.to_thread(self.__sender.start)
+            self.__sender.start()
             # receive folder structure
 
             ## Functions that runs in background
             if not self.__stop_all:
-                await asyncio.to_thread(self.__receiver.start)
+                self.__receiver.start()
             else:
                 # if it was true, then I reset it
                 self.__stop_all = False
@@ -103,7 +99,6 @@ class ClientGUI(App):
                 else:
                     self.log(f"res=\n{self.__folder_structure_server}")
 
-                self.query_one("#get_hierarchy", Button).loading = False
 
 
     # See this link for more details about push_screen_wait :)
@@ -112,6 +107,7 @@ class ClientGUI(App):
     @on(Button.Pressed, "#upload")
     async def handle_upload(self):
         self.query_one("#upload", Button).loading = True
+        await asyncio.to_thread(self.handle_get_hierarchy)
         self.__reset_content()
 
         src, dst = await self.push_screen_wait(MoveScreen(self.__folder_structure_server, get_client_folder() ))
@@ -156,7 +152,9 @@ class ClientGUI(App):
     @on(Button.Pressed, "#download")
     async def handle_download(self):
         self.query_one("#download", Button).loading = True
+        await asyncio.to_thread(self.handle_get_hierarchy)
         self.__reset_content()
+
         src, dst = await self.push_screen_wait(MoveScreen(get_client_folder(), self.__folder_structure_server))
 
         if ClientGUI.server_exists:
@@ -193,15 +191,17 @@ class ClientGUI(App):
     @on(Button.Pressed, "#move")
     async def handle_move(self):
         self.query_one("#move", Button).loading = True
+        await asyncio.to_thread(self.handle_get_hierarchy)
         self.__reset_content()
 
         src, dst = await self.push_screen_wait(MoveScreen(self.__folder_structure_server))
-        src = str(Constant.SERVER_FOLDER_PATH.value) + src
-        dst = str(Constant.SERVER_FOLDER_PATH.value) + dst
 
-        self.log(f"Header handle_move:\n src={src}, dst={dst}\n")
+
         if ClientGUI.server_exists:
             if src and dst:
+                src = str(Constant.SERVER_FOLDER_PATH.value) + src
+                dst = str(Constant.SERVER_FOLDER_PATH.value) + dst
+
                 self.__append_message(PacketType.MOVE)
                 self.__append_message(PacketType.DATA, src)
                 self.__append_message(PacketType.DATA, dst)
@@ -216,13 +216,15 @@ class ClientGUI(App):
     @on(Button.Pressed, "#delete")
     async def handle_delete(self):
         self.query_one("#delete", Button).loading = True
+        await asyncio.to_thread(self.handle_get_hierarchy)
         self.__reset_content()
 
         file_path = await self.push_screen_wait(RemoteTreeScreen("Delete", self.__folder_structure_server, True))
-        file_path = str(Constant.SERVER_FOLDER_PATH.value) + file_path
 
         if ClientGUI.server_exists:
             if file_path:
+                file_path = str(Constant.SERVER_FOLDER_PATH.value) + file_path
+
                 self.__append_message(PacketType.DELETE)
                 self.__append_message(PacketType.DATA, file_path)
                 self.__sender.set_content(self.__content)
@@ -240,20 +242,21 @@ class ClientGUI(App):
 
         window_size, timeout = await self.push_screen_wait(SettingsScreen())
         self.log(f"w={window_size}, t={timeout}")
-        # change the settings internally
-        self.__sender.set_timeout(timeout)
-        self.__sender.set_window_size(window_size)
-        self.__receiver.set_window_size(window_size)
-        # change the settings externally (server)
-        if ClientGUI.server_exists:
-            if window_size > 0 and timeout > 0.0:
-                self.__append_message(PacketType.SETTINGS)
-                self.__append_message(PacketType.DATA, str(window_size))
-                self.__append_message(PacketType.DATA, str(timeout))
-                self.__sender.set_content(self.__content)
+        if window_size > 0 and timeout > 0.0:
+            # change the settings internally
+            self.__sender.set_timeout(timeout)
+            self.__sender.set_window_size(window_size)
+            self.__receiver.set_window_size(window_size)
+            # change the settings externally (server)
 
-                ## Functions that runs in background
-                await asyncio.to_thread(self.__sender.start)
+            if ClientGUI.server_exists:
+                    self.__append_message(PacketType.SETTINGS)
+                    self.__append_message(PacketType.DATA, str(window_size))
+                    self.__append_message(PacketType.DATA, str(timeout))
+                    self.__sender.set_content(self.__content)
+
+                    ## Functions that runs in background
+                    await asyncio.to_thread(self.__sender.start)
         self.query_one("#settings", Button).loading = False
 
 
