@@ -19,7 +19,7 @@ class Server:
     def __init__(self):
         super().__init__()
 
-        self.__receiver = Receiver(Server.receiver_recv, Server.receiver_send)
+        self.__receiver: Receiver = Receiver(Server.receiver_recv, Server.receiver_send)
         self.__sender = Sender(Server.sender_recv, Server.sender_send)
         self.__message = []
 
@@ -37,7 +37,6 @@ class Server:
         # self.__message.append(Message(packet_type=PacketType.UPLOAD,sequence=0,data=file_path))
         # self.__message.append(Message(packet_type=PacketType.DELETE,sequence=0,data=content))
         while True:
-            self.__receiver = Receiver(Server.receiver_recv, Server.receiver_send)
             self.__receiver.start()  #blocant
             self.__message = self.__receiver.get_ordered_packets()
 

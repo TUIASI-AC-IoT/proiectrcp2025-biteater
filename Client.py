@@ -98,7 +98,7 @@ class ClientGUI(App):
             try:
                 res = json.loads(self.__folder_structure_server)
             except json.JSONDecodeError as e:
-                self.log(e)
+                self.log(f"Decode: {e}")
             except Exception as e:
                 self.log(f"General:\n{e}")
             else:
