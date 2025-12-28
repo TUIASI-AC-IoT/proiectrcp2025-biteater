@@ -17,8 +17,6 @@ class Server:
     receiver_send = ("127.0.0.1", 5000)
 
     def __init__(self):
-        super().__init__()
-
         self.__receiver: Receiver = Receiver(Server.receiver_recv, Server.receiver_send)
         self.__sender = Sender(Server.sender_recv, Server.sender_send)
         self.__message = []

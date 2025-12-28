@@ -92,18 +92,19 @@ class ClientGUI(App):
 
             # This code runs on the main thread after the receiver is done
             received_packets = self.__receiver.get_ordered_packets()
+
             if len(received_packets) > 0:
                 self.__folder_structure_server = reconstruct_string(received_packets)
                 self.log(f"HIERARCHY: \n{self.__folder_structure_server}\n")
-            try:
-                res = json.loads(self.__folder_structure_server)
-            except json.JSONDecodeError as e:
-                self.log(f"Decode: {e}")
-            except Exception as e:
-                self.log(f"General:\n{e}")
-            else:
-                self.log(f"res=\n{res}")
-            self.query_one("#get_hierarchy", Button).loading = False
+                try:
+                    res = json.loads(self.__folder_structure_server)
+                except json.JSONDecodeError as e:
+                    self.log(f"Decode: {e}")
+                except Exception as e:
+                    self.log(f"General:\n{e}")
+                else:
+                    self.log(f"res=\n{res}")
+                self.query_one("#get_hierarchy", Button).loading = False
 
 
     # See this link for more details about push_screen_wait :)
@@ -125,7 +126,8 @@ class ClientGUI(App):
                 ## Functions that runs in background
                 await asyncio.to_thread(self.__sender.start)
 
-                # This code runs on the main thread after the sender is done
+                # This code runs on the main thread after
+                # the sender is done
                 file_content = divide_file(str(Constant.CLIENT_FOLDER_PATH.value) + file_path)
                 for i in range(len(file_content)):
                     self.__append_message(PacketType.DATA, file_content[i])
