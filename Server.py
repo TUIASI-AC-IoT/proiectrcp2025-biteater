@@ -41,11 +41,25 @@ class Server(Thread):
         # destination_path = "FileExplorerServer/dir2"
         # self.__message.append(Message(packet_type=PacketType.UPLOAD,sequence=0,data=file_path))
         # self.__message.append(Message(packet_type=PacketType.DELETE,sequence=0,data=content))
-        self.process_message()
+        while True:
+            self.__receiver = Receiver(Server.receiver_recv, Server.receiver_send)
+            self.__receiver.start()  #blocant
+            self.__message = self.__receiver.get_ordered_packets()
 
+            if self.__message:
+                print("\tCommand received ...")
+                self.__sender = Sender(Server.sender_recv, Server.sender_send)
+                try:
+                    self.process_message()
+                except Exception as e:
+                    print(e)
+            print("Job done. Waiting for next command...")
+            self.__message = []
 
 
     def process_message(self):
+        if not self.__message:
+            return
         msg = self.__message.pop(0)
         operation = msg.packet_type
 
@@ -57,7 +71,7 @@ class Server(Thread):
             else:
                 print("The file does not exist")
 
-        if operation == PacketType.DOWNLOAD: #  1.[ ]  2. [path]
+        elif operation == PacketType.DOWNLOAD: #  1.[ ]  2. [path]
             msg2 = self.__message.pop(0)
             file_path = msg2.data
             if os.path.exists(file_path):
@@ -71,7 +85,7 @@ class Server(Thread):
             self.__sender.set_content(packet_list)
             self.__sender.start()
 
-        if operation == PacketType.MOVE: # 1.[ ] 2. [source_file_name] 3.[destination_path]
+        elif operation == PacketType.MOVE: # 1.[ ] 2. [source_file_name] 3.[destination_path]
             msg2 = self.__message.pop(0)
             msg3 = self.__message.pop(0)
             source = msg2.data
@@ -82,26 +96,50 @@ class Server(Thread):
             else:
                 print("The file does not exist")
 
-        if operation == PacketType.UPLOAD:   # 1.[ ]  2. [file_name]
+        elif operation == PacketType.UPLOAD:   # 1.[ ]  2. [file_name] 3-n [data]
             msg2 = self.__message.pop(0)
-            self.__receiver.start()
+            # self.__receiver.start()
             # pachete de tip data mai departe
             file_content = reconstruct_string(self.__receiver.get_ordered_packets())
             destination = msg2.data
 
-            with open("ByServer" + destination, "a") as destination_file:
+            with open(destination, "a") as destination_file:
                 destination_file.write(file_content)
 
-        # TODO SETTINGS, FOLDER OPERATION
+        elif operation == PacketType.HIERARCHY:  #1. []
+            folder:dict = folder_to_dict("FileExplorerServer")
+            json_packets:list[Message] = divide_json(folder)
+            self.__sender.set_content(json_packets)
+            self.__sender.start()
+
+        elif operation == PacketType.SETTINGS: #1.[] 2.[window_size] 3.[timeout]
+            print("*********")
+            msg2 = self.__message.pop(0)
+            msg3 = self.__message.pop(0)
+            window_size = int(msg2.data)
+            timeout = float(msg3.data)
+            print(window_size)
+            print(timeout)
+            self.__receiver.set_window_size(window_size)
+            self.__sender.set_window_size(window_size)
+            self.__sender.set_timeout(timeout)
+
+    def stop(self):
+        if self.__receiver:
+            self.__receiver.stop()
+        if self.__sender:
+            self.__sender.stop()
 
 def main():
+
     server = Server()
     server.start()
-
-    encode = encode_folder("FileExplorerServer")
-    # tree = decode_folder(encode)
-    # print(json.dumps(tree,indent=4))
-
+    try:
+        while True:
+            pass
+    except KeyboardInterrupt:
+        print("Server stopped")
+        server.stop()
 
 
 

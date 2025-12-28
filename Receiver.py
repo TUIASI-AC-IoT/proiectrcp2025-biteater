@@ -1,6 +1,5 @@
 import select
-import time
-from threading import Event, Thread
+from threading import Event
 import socket
 # from socket import AF_INET, SOCK_DGRAM
 from Constant import Constant
