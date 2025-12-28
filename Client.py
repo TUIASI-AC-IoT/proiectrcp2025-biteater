@@ -15,9 +15,9 @@ from Sender import Sender
 from DivideFile import divide_file
 import json
 
+
 def get_client_folder() -> dict:
     return folder_to_dict(str(Constant.CLIENT_FOLDER_PATH.value))
-
 
 
 class ClientGUI(App):

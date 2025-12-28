@@ -3,12 +3,11 @@ import shutil
 
 
 from DivideFile import divide_file
-from Message import Message, PacketType
+from Message import PacketType
 from Receiver import Receiver
 from ReconstructFile import reconstruct_string
 from Sender import Sender
 from JsonFile import *
-from threading import Thread
 
 class Server:
     sender_recv = ("127.0.0.1", 8000)

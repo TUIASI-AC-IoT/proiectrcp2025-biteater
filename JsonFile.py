@@ -1,9 +1,8 @@
 import json
 import os
 
-from Constant import Constant
-from Message import Message, PacketType
-from ReconstructFile import reconstruct_string
+from DivideFile import divide_str_into_messages
+from Message import Message
 
 
 def folder_to_dict(folder_path: str) -> dict:
@@ -24,20 +23,7 @@ def encode_folder(folder_path: str):
 def decode_folder(json_string):
     return json.loads(json_string)
 
-def divide_json(json_dict : dict):
+
+def divide_json(json_dict : dict) -> list[Message]:
     json_str: str = json.dumps(json_dict)
-    # Constant.PACKET_SIZE.value
-    packet_list: list[Message] = list()
-    packet_index: int = 0
-    string_pos: int = 0
-
-    max_data_size = Constant.PACKET_SIZE.value - Constant.HEADER_SIZE.value
-
-    while string_pos < len(json_str):
-        sliced_json = json_str[string_pos : string_pos + max_data_size]
-        packet = Message(PacketType.DATA, packet_index, sliced_json)
-        packet_list.append(packet)
-
-        string_pos += max_data_size
-        packet_index += 1
-    return packet_list
+    return divide_str_into_messages(json_str)
