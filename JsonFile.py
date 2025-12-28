@@ -1,6 +1,9 @@
 import json
 import os
 
+from Constant import Constant
+from Message import Message, PacketType
+
 
 def folder_to_dict(folder_path: str) -> dict:
     tree = {"name" : os.path.basename(folder_path),"type" : "folder","children" : []}
@@ -19,3 +22,18 @@ def encode_folder(folder_path: str):
 
 def decode_folder(json_string):
     return json.loads(json_string)
+
+def divide_json(json_dict : dict):
+    json_str = str(json_dict)
+    # Constant.PACKET_SIZE.value
+    packet_list = []
+    c=0
+    i = 0
+    while i<len(json_str):
+        sliced_json = json_str[i:i+Constant.PACKET_SIZE.value]
+        packet = Message(PacketType.DATA, c, sliced_json)
+        packet_list.append(packet)
+        i += Constant.PACKET_SIZE.value
+        c += 1
+
+    return packet_list

@@ -11,9 +11,11 @@ class Receiver:
     def __init__(self, bind_addr=RECEIVER_ADDR, sender_addr=SENDER_ADDR):
 
         self.__sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+        self.__sock.settimeout(3.0)
         # Permite refolosirea adresei imediat
         self.__sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.__sock.bind(bind_addr)
+
         self.__sender_addr = sender_addr
         self.__running: Event = Event()
 
@@ -73,9 +75,12 @@ class Receiver:
 
     def __receive_loop(self):
         while self.__running.is_set():
-
-            raw_data, addr = self.__sock.recvfrom(512)
-
+            try:
+                raw_data, addr = self.__sock.recvfrom(512)
+            except socket.timeout:
+                continue
+            except OSError:
+                break #socket closed
             message = Message.deserialize(raw_data)
 
             self.process_packet(message)
