@@ -20,7 +20,7 @@ class Server(Thread):
         super().__init__(daemon=True)
 
         self.__receiver = None
-        self.__sender = Sender(Server.sender_recv, Server.sender_send)
+        self.__sender = None
         self.__message = []
 
     def run(self):
@@ -41,11 +41,19 @@ class Server(Thread):
             self.__receiver = Receiver(Server.receiver_recv, Server.receiver_send)
             self.__receiver.start()
             self.__message = self.__receiver.get_ordered_packets()
-        self.process_message()
 
-
+            if self.__message:
+                print("\tCommand received ...")
+                self.__sender = Sender(Server.sender_recv, Server.sender_send)
+                try:
+                    self.process_message()
+                except Exception as e:
+                    print(e)
+            print("Job done. Waiting for next command...")
 
     def process_message(self):
+        if not self.__message:
+            return
         msg = self.__message.pop(0)
         operation = msg.packet_type
 
@@ -106,9 +114,9 @@ class Server(Thread):
             timeout = msg3.data
             print(window_size)
             print(timeout)
-            self.__receiver.set_window_size(window_size)
-            self.__sender.set_window_size(window_size)
-            self.__sender.set_timeout(timeout)
+            # self.__receiver.set_window_size(window_size)
+            # self.__sender.set_window_size(window_size)
+            # self.__sender.set_timeout(timeout)
 
     def stop(self):
         self.__receiver.stop()
