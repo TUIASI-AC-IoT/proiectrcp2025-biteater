@@ -1,44 +1,31 @@
 import os
 from asyncio import sleep
 
+from Constant import Constant
+from Message import Message, PacketType
+
+
+def divide_filename(filename: str):
+    packet_list = []
+    string_pos = 0
+    packet_index = 0
+    max_data_size =32 - Constant.HEADER_SIZE.value
+
+    while string_pos < len(filename):
+        sliced_filename = filename[string_pos:string_pos + max_data_size]
+        packet = Message(PacketType.DATA, packet_index, sliced_filename)
+        packet_list.append(packet)
+
+        string_pos += max_data_size
+        packet_index += 1
+
+    return packet_list
 
 def main():
 
-    fd_position = 0
-
-
-    speed = 150
-    engine.setProperty('rate', speed)
-
-
-    with open("../transmitor.txt", "rb") as fd:
-        with open("../TemporaryInvalid/received.txt", "wb") as fd_out:
-            # print(fd.readline(3))
-
-            c=1
-            while True:
-                print(f"\tPACKET {c}")
-                content= fd.read(10)
-                if content == b"":
-                    break
-
-                #trimitere continut pe thread
-                print(content)
-
-                #primire continut de la transmitator
-                #pierdere packet index $3
-                if c != 3:
-                    fd_out.seek(10*(c-1))
-                    fd_out.write(content)
-
-                c+=1
-
-            missed_packet = 3
-            print(f"\n\tCaut un packet pierdut...${missed_packet}...")
-            fd.seek((missed_packet-1)*10)
-            content = fd.read(10)
-            fd_out.seek(10*(missed_packet-1))
-            fd_out.write(content)
+    packet = divide_filename("dsfdsf/fdsa/f/dsafe/t/y/tjht/h/tg/egwegwe/fwe/f/wef/we/fwe")
+    for packet in packet:
+        print(packet)
 
 
 
