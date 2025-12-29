@@ -50,15 +50,23 @@ class RemoteTree(Widget):
         self.__server_data = server_data if server_data else SERVER_DATA
 
     def compose(self):
-        yield Tree("Project Root", id="json_tree")
+        root_name = self.__server_data.get("name", "Unknown Root")
+        yield Tree(root_name, id="json_tree")
 
     def on_mount(self) -> None:
         tree = self.query_one("#json_tree", Tree)
-        tree.show_root = False
+        tree.show_root = True
 
         # Start the recursive build from the server data
+        root_name = self.__server_data.get("name", "Unknown Root")
+        tree.root.data = {
+            "original_data": self.__server_data,
+            "full_path": root_name,
+            "type": self.__server_data.get("type", "folder")
+        }
+
         for child in self.__server_data.get("children", []):
-            self.add_json_node(tree.root, child, parent_path='')
+            self.add_json_node(tree.root, child, parent_path=root_name)
 
         tree.root.expand()
 

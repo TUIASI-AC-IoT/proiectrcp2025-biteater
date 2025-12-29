@@ -114,12 +114,10 @@ class ClientGUI(App):
 
         if ClientGUI.server_exists:
             if src and dst:
-                src_copy = src[1:] # without "/" in front
-                dst_copy = dst[1:] # without "/" in front
                 last_path_name = Path(src).name
 
-                relative_dst_path = Path(Constant.SERVER_FOLDER_PATH) / dst_copy / last_path_name
-                relative_src_path = Path(Constant.CLIENT_FOLDER_PATH) / src_copy
+                relative_dst_path = Path(dst) / last_path_name
+                relative_src_path = Path(src)
 
                 self.__append_message(PacketType.UPLOAD)
                 self.__append_message(PacketType.DATA, str(relative_dst_path))
@@ -160,14 +158,9 @@ class ClientGUI(App):
 
         if ClientGUI.server_exists:
             if src and dst:
-
-                src_copy = src[1:]  # without "/" in front
-                dst_copy = dst[1:]  # without "/" in front
                 last_path_name = Path(src).name
-
-                relative_dst_path: Path = Path(Constant.SERVER_FOLDER_PATH) / src_copy
-                relative_src_path: Path = Path(Constant.CLIENT_FOLDER_PATH) / dst_copy / last_path_name
-
+                relative_dst_path: Path = Path(src)
+                relative_src_path: Path = Path(dst) / last_path_name
 
 
                 self.log(f"relative_dst_path = {relative_dst_path}")
@@ -209,8 +202,8 @@ class ClientGUI(App):
 
         if ClientGUI.server_exists:
             if src and dst:
-                relative_src_path = Path(Constant.SERVER_FOLDER_PATH) / src[1:]
-                relative_dst_path = Path(Constant.SERVER_FOLDER_PATH) / dst[1:]
+                relative_src_path = Path(src)
+                relative_dst_path = Path(dst)
 
                 self.__append_message(PacketType.MOVE)
                 self.__append_message(PacketType.DATA, str(relative_src_path))
@@ -233,7 +226,7 @@ class ClientGUI(App):
 
         if ClientGUI.server_exists:
             if file_path:
-                relative_file_path = Path(Constant.SERVER_FOLDER_PATH) / file_path[1:]
+                relative_file_path = Path(file_path)
 
                 self.__append_message(PacketType.DELETE)
                 self.__append_message(PacketType.DATA, str(relative_file_path))

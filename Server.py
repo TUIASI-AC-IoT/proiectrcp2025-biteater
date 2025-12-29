@@ -1,6 +1,6 @@
 
 import shutil
-
+from pathlib import Path
 
 from DivideFile import divide_file
 from Message import PacketType
@@ -66,7 +66,7 @@ class Server:
             msg2 = self.__message.pop(0)
             file_path = msg2.data
             if os.path.exists(file_path):
-                data_list = divide_file(file_path)
+                data_list = divide_file(Path(file_path))
                 packet_list = [Message(PacketType.DATA, i, data_list[i]) for i in range(len(data_list))]
 
             else:
