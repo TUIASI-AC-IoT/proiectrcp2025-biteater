@@ -1,5 +1,8 @@
 from textual.validation import Validator, ValidationResult
 
+def is_valid_path(path: str):
+    pass
+
 
 class GoodWindowSize(Validator):
     def validate(self, value: str) -> ValidationResult | None:

@@ -2,7 +2,7 @@ import asyncio
 
 from textual import on, work
 from textual.app import App, ComposeResult
-from textual.containers import Center, CenterMiddle
+from textual.containers import CenterMiddle
 from textual.widgets import Footer, Button
 
 from Constant import Constant
@@ -14,10 +14,10 @@ from ReconstructFile import reconstruct_string, reconstruct_file
 from Sender import Sender
 from DivideFile import divide_file
 import json
-
+from pathlib import Path
 
 def get_client_folder() -> dict:
-    return folder_to_dict(str(Constant.CLIENT_FOLDER_PATH.value))
+    return folder_to_dict(Constant.CLIENT_FOLDER_PATH)
 
 
 class ClientGUI(App):
@@ -114,14 +114,15 @@ class ClientGUI(App):
 
         if ClientGUI.server_exists:
             if src and dst:
-                temp: list[str] = src.split('/')
-                dst = str(Constant.SERVER_FOLDER_PATH.value) + dst + '/' + temp[len(temp) - 1]
-                src = str(Constant.CLIENT_FOLDER_PATH.value) + src
-                self.log(f"dst = {dst}")
-                self.log(f"src = {src}")
+                src_copy = src[1:] # without "/" in front
+                dst_copy = dst[1:] # without "/" in front
+                last_path_name = Path(src).name
+
+                relative_dst_path = Path(Constant.SERVER_FOLDER_PATH) / dst_copy / last_path_name
+                relative_src_path = Path(Constant.CLIENT_FOLDER_PATH) / src_copy
 
                 self.__append_message(PacketType.UPLOAD)
-                self.__append_message(PacketType.DATA, dst)
+                self.__append_message(PacketType.DATA, str(relative_dst_path))
                 self.__sender.set_content(self.__content)
 
                 ## Functions that runs in background
@@ -132,7 +133,7 @@ class ClientGUI(App):
                 # This code runs on the main thread after
                 # the sender is done
 
-                file_content = divide_file(src)
+                file_content = divide_file(relative_src_path)
                 for i in range(len(file_content)):
                     self.__append_message(PacketType.DATA, file_content[i])
                 self.__sender.set_content(self.__content)
@@ -159,12 +160,21 @@ class ClientGUI(App):
 
         if ClientGUI.server_exists:
             if src and dst:
-                src = str(Constant.SERVER_FOLDER_PATH.value) + src
-                temp: list[str] = src.split('/')
-                dst = str(Constant.CLIENT_FOLDER_PATH.value) + dst + '/' + temp[len(temp) - 1]
+
+                src_copy = src[1:]  # without "/" in front
+                dst_copy = dst[1:]  # without "/" in front
+                last_path_name = Path(src).name
+
+                relative_dst_path: Path = Path(Constant.SERVER_FOLDER_PATH) / src_copy
+                relative_src_path: Path = Path(Constant.CLIENT_FOLDER_PATH) / dst_copy / last_path_name
+
+
+
+                self.log(f"relative_dst_path = {relative_dst_path}")
+                self.log(f"relative_src_path = {relative_src_path}")
 
                 self.__append_message(PacketType.DOWNLOAD)
-                self.__append_message(PacketType.DATA, src)
+                self.__append_message(PacketType.DATA, str(relative_dst_path))
                 self.__sender.set_content(self.__content)
 
                 ## Functions that runs in background
@@ -179,10 +189,10 @@ class ClientGUI(App):
                     self.__stop_all = False
 
                 file_content: str = reconstruct_string(self.__receiver.get_ordered_packets())
-                if file_content == '' or file_content == Constant.NO_DATA.value:
+                if file_content == '' or file_content == Constant.NO_DATA:
                     self.notify("Failed to download a file", title="DOWNLOAD OPERATION", severity="error")
                 else:
-                    reconstruct_file(file_content, dst)
+                    reconstruct_file(file_content, relative_src_path)
 
         self.query_one("#download", Button).loading = False
 
@@ -199,12 +209,12 @@ class ClientGUI(App):
 
         if ClientGUI.server_exists:
             if src and dst:
-                src = str(Constant.SERVER_FOLDER_PATH.value) + src
-                dst = str(Constant.SERVER_FOLDER_PATH.value) + dst
+                relative_src_path = Path(Constant.SERVER_FOLDER_PATH) / src[1:]
+                relative_dst_path = Path(Constant.SERVER_FOLDER_PATH) / dst[1:]
 
                 self.__append_message(PacketType.MOVE)
-                self.__append_message(PacketType.DATA, src)
-                self.__append_message(PacketType.DATA, dst)
+                self.__append_message(PacketType.DATA, str(relative_src_path))
+                self.__append_message(PacketType.DATA, str(relative_dst_path))
                 self.__sender.set_content(self.__content)
 
                 ## Functions that runs in background so app GUI can be refreshed
@@ -223,10 +233,10 @@ class ClientGUI(App):
 
         if ClientGUI.server_exists:
             if file_path:
-                file_path = str(Constant.SERVER_FOLDER_PATH.value) + file_path
+                relative_file_path = Path(Constant.SERVER_FOLDER_PATH) / file_path[1:]
 
                 self.__append_message(PacketType.DELETE)
-                self.__append_message(PacketType.DATA, file_path)
+                self.__append_message(PacketType.DATA, str(relative_file_path))
                 self.__sender.set_content(self.__content)
 
                 ## Functions that runs in background

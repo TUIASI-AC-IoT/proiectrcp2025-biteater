@@ -17,7 +17,7 @@ class Receiver:
         self.__sender_addr = sender_addr
         self.__running: Event = Event()
 
-        self.__window_size: int = Constant.WINDOW_SIZE.value
+        self.__window_size: int = Constant.WINDOW_SIZE
         self.__window_base = -1
         self.__expected_total: int | None = None
 
@@ -92,10 +92,10 @@ class Receiver:
     def __receive_loop(self):
         while self.__running.is_set():
             try:
-                ready, _, _ = select.select([self.__sock], [], [], Constant.SOCK_TIMEOUT.value)
+                ready, _, _ = select.select([self.__sock], [], [], Constant.SOCK_TIMEOUT)
                 if ready:
 
-                    raw_data, addr = self.__sock.recvfrom(Constant.PACKET_SIZE.value)
+                    raw_data, addr = self.__sock.recvfrom(Constant.PACKET_SIZE)
                     message = Message.deserialize(raw_data)
 
                     self.process_packet(message)

@@ -208,14 +208,14 @@ class SettingsScreen(ModalScreen[tuple[int, float]]):
         with Vertical():
             yield Label("Settings")
             yield Input(
-                placeholder=str(Constant.WINDOW_STR.value),
+                placeholder=Constant.WINDOW_STR,
                 validators=GoodWindowSize(),
                 id="window_input",
                 type="integer"
             )
             yield Pretty("", id="window_log")
             yield Input(
-                placeholder=str(Constant.TIMEOUT_STR.value),
+                placeholder=Constant.TIMEOUT_STR,
                 validators=GoodTimeout(),
                 id="timeout_input",
                 type="number"

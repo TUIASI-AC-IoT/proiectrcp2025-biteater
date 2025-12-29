@@ -41,12 +41,12 @@ class Message:
     @staticmethod
     def deserialize(data_in):
         try:
-            header = data_in[:Constant.HEADER_SIZE.value]
+            header = data_in[:Constant.HEADER_SIZE]
             # '2s' = 2 bytes for PacketType (e.g., "11")
             # '!I' = 4 bytes for Sequence Number (Unsigned Integer, Network Byte Order)
             packet_type_encoded, sequence = struct.unpack('!2sI', header)
             packet_type = packet_type_encoded.decode('ascii').strip()
-            data_encoded = data_in[Constant.HEADER_SIZE.value:]
+            data_encoded = data_in[Constant.HEADER_SIZE:]
             data = data_encoded.decode('utf-8')
 
             return Message(PacketType(packet_type), sequence, data)

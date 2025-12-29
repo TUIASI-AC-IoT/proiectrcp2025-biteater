@@ -20,8 +20,8 @@ class Sender:
 
         self.__bind_address : str           = bind_addr
         self.__receiver_addr = receiver_addr
-        self.__window_size = Constant.WINDOW_SIZE.value
-        self.__timeout = Constant.PACKET_TIMEOUT.value
+        self.__window_size = Constant.WINDOW_SIZE
+        self.__timeout = Constant.PACKET_TIMEOUT
         self.__current_packet = 0                         # pachetul curent care se transmite
         self.__left_window_margin = 0                     # indica indexul din stanga a ferestrei glisante
         self.__lock = RLock()                              # pentru a schimba continutul variabelor self.timers, self.acked_packets, self.current_packet
@@ -80,11 +80,11 @@ class Sender:
     def __receive_acks(self) -> None:
         while self.__running.is_set():
 
-            ready, _, _ = select.select([self.__sock], [], [], Constant.SOCK_TIMEOUT.value)
+            ready, _, _ = select.select([self.__sock], [], [], Constant.SOCK_TIMEOUT)
 
             if ready:
                 try:
-                    raw_data, addr = self.__sock.recvfrom(Constant.PACKET_SIZE.value)
+                    raw_data, addr = self.__sock.recvfrom(Constant.PACKET_SIZE)
                 except OSError:
                     # WHEN? Occurs when I call "stop" from the ClientGUI class but recvfrom is still running
                     # but, I can not close the socket if it is still running, here comes the exception
@@ -124,7 +124,7 @@ class Sender:
 
     def __send_packet(self, seq: int):
         message = self.__content[seq]
-        if random() > Constant.LOSS_PROB.value:              # simulate packet loss
+        if random() > Constant.LOSS_PROB:              # simulate packet loss
             self.__sock.sendto(message.serialize(), self.__receiver_addr)
         self.__start_timer(seq)
 
@@ -171,7 +171,7 @@ def test_receive_message():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind(RECEIVER_ADDR)
     while True:
-        raw, addr = sock.recvfrom(Constant.PACKET_SIZE.value)
+        raw, addr = sock.recvfrom(Constant.PACKET_SIZE)
         message = Message.deserialize(raw)
 
         sock.sendto(Message(PacketType.ACK, message.sequence, message.data + "-ack").serialize(), SENDER_ADDR)
