@@ -55,8 +55,7 @@ class Server:
         operation = msg.packet_type
 
         if operation == PacketType.DELETE: # 1. [ ] 2.[path]
-            msg2 = self.__message.pop(0)
-            file_path = msg2.data
+            file_path = reconstruct_string(self.__receiver.get_ordered_packets())
             if os.path.exists(file_path):
                 os.remove(file_path)
             else:
@@ -77,25 +76,26 @@ class Server:
             self.__sender.start()
 
         elif operation == PacketType.MOVE: # 1.[ ] 2. [source_file_name] 3.[destination_path]
-            msg2 = self.__message.pop(0)
-            msg3 = self.__message.pop(0)
-            source = msg2.data
-            destination = msg3.data
-            print(source)
-            if os.path.exists(source) and os.path.exists(destination):
-                shutil.move(source, destination)
+            src = reconstruct_string(self.__receiver.get_ordered_packets())
+            self.__receiver.start()
+            dst = reconstruct_string(self.__receiver.get_ordered_packets())
+
+            print(src)
+            if os.path.exists(src) and os.path.exists(dst):
+                shutil.move(src, dst)
             else:
                 print("The file does not exist")
 
         elif operation == PacketType.UPLOAD:   # 1.[ ]  2. [dst]
-            msg2 = self.__message.pop(0)
+            # receive file_name
+            destination = reconstruct_string(self.__receiver.get_ordered_packets())
+            print("destination = ", destination)
             #  0-N. [data]
             self.__receiver.start()
             # pachete de tip data mai departe
             file_content = reconstruct_string(self.__receiver.get_ordered_packets())
-            destination = msg2.data
 
-            with open(destination, "a") as destination_file:
+            with open(destination, "w") as destination_file:
                 destination_file.write(file_content)
 
         elif operation == PacketType.HIERARCHY:  #1. []
@@ -106,7 +106,6 @@ class Server:
             self.__sender.start()
 
         elif operation == PacketType.SETTINGS: #1.[] 2.[window_size] 3.[timeout]
-            print("*********")
             msg2 = self.__message.pop(0)
             msg3 = self.__message.pop(0)
             window_size = int(msg2.data)

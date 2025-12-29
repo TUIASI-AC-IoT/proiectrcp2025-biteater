@@ -12,9 +12,10 @@ from Message import Message, PacketType
 from Receiver import Receiver
 from ReconstructFile import reconstruct_string, reconstruct_file
 from Sender import Sender
-from DivideFile import divide_file
+from DivideFile import divide_file, divide_str_into_messages
 import json
 from pathlib import Path
+
 
 def get_client_folder() -> dict:
     return folder_to_dict(Constant.CLIENT_FOLDER_PATH)
@@ -116,11 +117,14 @@ class ClientGUI(App):
             if src and dst:
                 last_path_name = Path(src).name
 
-                relative_dst_path = Path(dst) / last_path_name
-                relative_src_path = Path(src)
+                relative_dst_path_obj = Path(dst) / last_path_name
+                relative_src_path_obj = Path(src)
 
                 self.__append_message(PacketType.UPLOAD)
-                self.__append_message(PacketType.DATA, str(relative_dst_path))
+                # divide filename into multiple packets if needed
+                file_name_packets: list[Message] = divide_str_into_messages(str(relative_dst_path_obj), 1)
+                self.__content.extend(file_name_packets)
+
                 self.__sender.set_content(self.__content)
 
                 ## Functions that runs in background
@@ -131,7 +135,7 @@ class ClientGUI(App):
                 # This code runs on the main thread after
                 # the sender is done
 
-                file_content = divide_file(relative_src_path)
+                file_content = divide_file(relative_src_path_obj)
                 for i in range(len(file_content)):
                     self.__append_message(PacketType.DATA, file_content[i])
                 self.__sender.set_content(self.__content)
@@ -159,15 +163,15 @@ class ClientGUI(App):
         if ClientGUI.server_exists:
             if src and dst:
                 last_path_name = Path(src).name
-                relative_dst_path: Path = Path(src)
-                relative_src_path: Path = Path(dst) / last_path_name
+                relative_dst_path_obj: Path = Path(src)
+                relative_src_path_obj: Path = Path(dst) / last_path_name
 
-
-                self.log(f"relative_dst_path = {relative_dst_path}")
-                self.log(f"relative_src_path = {relative_src_path}")
 
                 self.__append_message(PacketType.DOWNLOAD)
-                self.__append_message(PacketType.DATA, str(relative_dst_path))
+                # divide filename into multiple packets if needed
+                file_name_packets: list[Message] = divide_str_into_messages(str(relative_dst_path_obj), 1)
+                self.__content.extend(file_name_packets)
+
                 self.__sender.set_content(self.__content)
 
                 ## Functions that runs in background
@@ -185,7 +189,7 @@ class ClientGUI(App):
                 if file_content == '' or file_content == Constant.NO_DATA:
                     self.notify("Failed to download a file", title="DOWNLOAD OPERATION", severity="error")
                 else:
-                    reconstruct_file(file_content, relative_src_path)
+                    reconstruct_file(file_content, relative_src_path_obj)
 
         self.query_one("#download", Button).loading = False
 
@@ -202,16 +206,22 @@ class ClientGUI(App):
 
         if ClientGUI.server_exists:
             if src and dst:
-                relative_src_path = Path(src)
-                relative_dst_path = Path(dst)
+                relative_src_path_obj = Path(src)
+                relative_dst_path_obj = Path(dst)
 
                 self.__append_message(PacketType.MOVE)
-                self.__append_message(PacketType.DATA, str(relative_src_path))
-                self.__append_message(PacketType.DATA, str(relative_dst_path))
+                # divide filename into multiple packets if needed
+                file_name_packets_src: list[Message] = divide_str_into_messages(str(relative_src_path_obj), 1)
+                self.__content.extend(file_name_packets_src)
                 self.__sender.set_content(self.__content)
+                await asyncio.to_thread(self.__sender.start)
 
+                # divide filename into multiple packets if needed
+                file_name_packets_dst: list[Message] = divide_str_into_messages(str(relative_dst_path_obj))
+                self.__sender.set_content(file_name_packets_dst)
                 ## Functions that runs in background so app GUI can be refreshed
                 await asyncio.to_thread(self.__sender.start)
+
         self.query_one("#move", Button).loading = False
 
 
@@ -226,10 +236,13 @@ class ClientGUI(App):
 
         if ClientGUI.server_exists:
             if file_path:
-                relative_file_path = Path(file_path)
+                relative_file_path_obj = Path(file_path)
 
                 self.__append_message(PacketType.DELETE)
-                self.__append_message(PacketType.DATA, str(relative_file_path))
+                # divide filename into multiple packets if needed
+                file_name_packets_src: list[Message] = divide_str_into_messages(str(relative_file_path_obj), 1)
+                self.__content.extend(file_name_packets_src)
+
                 self.__sender.set_content(self.__content)
 
                 ## Functions that runs in background

@@ -16,10 +16,10 @@ def divide_file(filename_obj: Path) -> list[str]:
     return packet_list
 
 
-def divide_str_into_messages(string: str) -> list[Message]:
+def divide_str_into_messages(string: str, start_index: int = 0) -> list[Message]:
     packet_list: list[Message] = []
     string_pos = 0
-    packet_index = 0
+    packet_index = start_index
     max_data_size = Constant.PACKET_SIZE - Constant.HEADER_SIZE
 
     while string_pos < len(string):
