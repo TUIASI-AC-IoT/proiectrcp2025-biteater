@@ -61,11 +61,10 @@ class Server:
             else:
                 print("The file does not exist")
 
-        elif operation == PacketType.DOWNLOAD: #  1.[ ]  2. [path]
-            msg2 = self.__message.pop(0)
-            file_path = msg2.data
-            if os.path.exists(file_path):
-                data_list = divide_file(Path(file_path))
+        elif operation == PacketType.DOWNLOAD: #  1.[ ]  [path1] [path2] ...
+            src = reconstruct_string(self.__receiver.get_ordered_packets())
+            if os.path.exists(src):
+                data_list = divide_file(Path(src))
                 packet_list = [Message(PacketType.DATA, i, data_list[i]) for i in range(len(data_list))]
 
             else:
@@ -75,7 +74,7 @@ class Server:
             self.__sender.set_content(packet_list)
             self.__sender.start()
 
-        elif operation == PacketType.MOVE: # 1.[ ] 2. [source_file_name] 3.[destination_path]
+        elif operation == PacketType.MOVE: # 1.[ ] [source_file_name1] [source_file_name2]....  [destination_path1] [destination_path2] ...
             src = reconstruct_string(self.__receiver.get_ordered_packets())
             self.__receiver.start()
             dst = reconstruct_string(self.__receiver.get_ordered_packets())
@@ -86,7 +85,7 @@ class Server:
             else:
                 print("The file does not exist")
 
-        elif operation == PacketType.UPLOAD:   # 1.[ ]  2. [dst]
+        elif operation == PacketType.UPLOAD:   # 1.[ ]  [dst1] [dst2] ...
             # receive file_name
             destination = reconstruct_string(self.__receiver.get_ordered_packets())
             print("destination = ", destination)
