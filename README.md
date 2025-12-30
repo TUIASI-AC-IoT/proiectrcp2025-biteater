@@ -96,10 +96,6 @@ Each stage is started by a _receive.start()_ call from the **server** and _sende
 | | | `1..k. Message(PacketType.DATA, ..., filename[...])` | Sends filename chunks. |
 | **Hierarchy**| **1** | `0. Message(PacketType.HIERARCHY, 0, "")` | Requests file hierarchy structure. |---
 
-### Diagram sequence
-<img width="3675" height="7685" alt="Image" src="https://github.com/user-attachments/assets/ba1e7a12-24f6-4b02-81f5-53bfe0d80a9f" />
-<br/>
-
 ### ⚙️ Sliding Window Settings
 
 
