@@ -28,22 +28,22 @@ Settings Menu<br/><br/>
 
 All communications between the Client and Server use a strictly defined packet structure (UDP datagrams):
 
-| Field               | Size              | Description                                                           |
-|:--------------------|:------------------|:----------------------------------------------------------------------|
-| **PACKET\_TYPE**    | 1 char ( 1 byte ) | Identifies the packet's overall purpose (Operation, ACK, Data, etc.). |
-| **OPERATION\_TYPE** | 1 char ( 1 byte ) | Details the specific operation or state (Upload, ACK, etc.).          |
-| **SEQUENCE**        | int ( 4 bytes )   | Denotes packet order                                                  |
-| **DATA**            | n - 6 bytes       | The payload or supplementary information.                             |
+| Field             | Size          | Description                                                           |
+|:------------------|:--------------|:----------------------------------------------------------------------|
+| *PACKET\_TYPE*    | 1 byte        | Identifies the packet's overall purpose (Operation, ACK, Data, etc.). |
+| *OPERATION\_TYPE* | 1 byte        | Details the specific operation or state (Upload, ACK, etc.).          |
+| *SEQUENCE*        | 4 bytes       | Denotes packet order                                                  |
+| *DATA*            | n - 6 bytes   | The payload or supplementary information.                             |
 
 
 ### 1. PACKET\_TYPE Encoding
 
 | PACKET\_TYPE          | Code | Description                                               |
-|:----------------------| :--- |:----------------------------------------------------------|
-| Operation             | `0` | A packet that initiates an action (e.g., Upload, Delete). |
-| ACK                   | `1` | Acknowledgment response.                                  |
-| Data                  | `2` | A packet carrying the actual file data.                   |
-| End of a transmission | `3` | Signals the end of a sequence of packets (a frame).       |
+|:----------------------|:-----|:----------------------------------------------------------|
+| Operation             | `0`  | A packet that initiates an action (e.g., Upload, Delete). |
+| ACK                   | `1`  | Acknowledgment response.                                  |
+| Data                  | `2`  | A packet carrying the actual file data.                   |
+| End of a transmission | `3`  | Signals the end of a sequence of packets (a frame).       |
 
 ### 2. OPERATION_TYPE Encoding
 
