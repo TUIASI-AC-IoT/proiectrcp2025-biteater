@@ -38,12 +38,12 @@ All communications between the Client and Server use a strictly defined packet s
 
 ### 1. PACKET\_TYPE Encoding
 
-| PACKET\_TYPE          | Code | Description                                               |
-|:----------------------|:-----|:----------------------------------------------------------|
-| Operation             | `0`  | A packet that initiates an action (e.g., Upload, Delete). |
-| ACK                   | `1`  | Acknowledgment response.                                  |
-| Data                  | `2`  | A packet carrying the actual file data.                   |
-| End of a transmission | `3`  | Signals the end of a sequence of packets (a frame).       |
+| PACKET\_TYPE            | Code | Description                                               |
+|:------------------------|:-----|:----------------------------------------------------------|
+| *Operation*             | `0`  | A packet that initiates an action (e.g., Upload, Delete). |
+| *ACK*                   | `1`  | Acknowledgment response.                                  |
+| *Data*                  | `2`  | A packet carrying the actual file data.                   |
+| *End of a transmission* | `3`  | Signals the end of a sequence of packets (a frame).       |
 
 ### 2. OPERATION_TYPE Encoding
 
@@ -51,15 +51,15 @@ This field is interpreted based on the preceding `PACKET_TYPE`:
 
 | Context                       | OPERATION_TYPE          | Code | Description                                                                                  |
 |-------------------------------|-------------------------|------|----------------------------------------------------------------------------------------------|
-| **PACKET_TYPE 0 (Operation)** | Upload                  | 00   | Initiates a file upload.                                                                     |
+| *PACKET_TYPE 0 (Operation)* | Upload                  | 00   | Initiates a file upload.                                                                     |
 |                               | Download                | 01   | Initiates a file download.                                                                   |
 |                               | Delete                  | 02   | Requests file deletion.                                                                      |
 |                               | Move                    | 03   | Requests file movement.                                                                      |
 |                               | Sliding Window settings | 04   | Used to configure sliding window parameters.                                                 |
- |                               | Get Hierarchy           | 05   | Request file hierarchy                                                                       |
-| **PACKET_TYPE 1 (ACK)**       | ACK                     | 10   | Confirms successful receipt of a packet.                                                     |
-| **PACKET_TYPE 2 (Data)**      | Data                    | 20   | Data packet. The first character of the DATA field **must be the packet's sequence number**. |
-| **PACKET_TYPE 3 (END)**       | End of a transmission   | 30    | Denotes the end of a trasmission                                                             |
+|                               | Get Hierarchy           | 05   | Request file hierarchy                                                                       |
+| *PACKET_TYPE 1 (ACK)*         | ACK                     | 10   | Confirms successful receipt of a packet.                                                     |
+| *PACKET_TYPE 2 (Data)*        | Data                    | 20   | Data packet. The first character of the DATA field **must be the packet's sequence number**. |
+| *PACKET_TYPE 3 (END)*         | End of a transmission   | 30    | Denotes the end of a trasmission                                                             |
 
 ## 🚀 Client Protocol Documentation
 
@@ -130,11 +130,11 @@ This makes UDP ideal for **real-time** and **time-sensitive** applications, wher
 
 | Feature | Description |
 |----------|--------------|
-| **Connectionless** | No connection setup before sending data. Each packet (datagram) is sent independently. |
-| **Unreliable Delivery** | Packets may be lost, duplicated, or received out of order. |
-| **No Congestion Control** | UDP sends data as fast as the application allows, without rate limiting. |
-| **Low Latency** | Minimal protocol overhead makes it ideal for fast communication. |
-| **Checksum Field** | Optional integrity check for detecting errors in transmission. |
+| *Connectionless* | No connection setup before sending data. Each packet (datagram) is sent independently. |
+| *Unreliable Delivery* | Packets may be lost, duplicated, or received out of order. |
+| *No Congestion Control* | UDP sends data as fast as the application allows, without rate limiting. |
+| *Low Latency* | Minimal protocol overhead makes it ideal for fast communication. |
+| *Checksum Field* | Optional integrity check for detecting errors in transmission. |
 
 ---
 ## ⚙️ Flow Control
@@ -291,5 +291,6 @@ The console is going to only listen to events happening in terminal 2
 - [UDP](https://www.geeksforgeeks.org/computer-networks/user-datagram-protocol-udp/)
 - [Textual Documentation](https://textual.textualize.io/)
 - [Textual GitHub Repository](https://github.com/Textualize/textual)
+
 
 
