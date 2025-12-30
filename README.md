@@ -148,7 +148,7 @@ The project utilizes the **Sliding Window Protocol** specifically implemented as
 <img width="4480" height="6225" alt="Image" src="https://github.com/user-attachments/assets/5ed3f66f-5d5f-436d-99e3-3beb958a979c" />
 <br/>
 
-## Client-Server Packet Interaction
+## Client-Server Flow
 <img width="4522" height="11515" alt="Image" src="https://github.com/user-attachments/assets/c637972d-062b-482b-92b5-18b2c2d43641" />
 <br/>
 
