@@ -203,7 +203,6 @@ class ServerGUI(App):
         yield Footer()
 
     def on_mount(self):
-        self.write_to_terminal("Press 'Start' to listen")
         self.write_packet_log("Waiting for traffic...")
     
     def write_to_terminal(self,text:str):

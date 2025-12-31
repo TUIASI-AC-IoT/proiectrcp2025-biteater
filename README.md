@@ -9,7 +9,7 @@ The main objective is to demonstrate the ability to construct a virtual "reliabl
 ---
 
 
-## Demo<br/>
+## Demo CLIENT<br/>
 Main Menu<br/><br/>
 <img width="800" height="600" alt="Image" src="https://github.com/user-attachments/assets/7ed54dec-fb5f-476a-9b7b-01746558ddef" /><br/><br/>
 Upload Menu<br/><br/>
@@ -23,6 +23,10 @@ Delete Menu<br/><br/>
 Settings Menu<br/><br/>
 <img width="800" height="600" alt="Image" src="https://github.com/user-attachments/assets/74b3e4e3-9005-4a9a-b94d-0ca076ff9c36" /><br/><br/>
 ---
+
+## Demo SERVER<br/>
+Main Menu<br/><br/>
+<img width="800" height="600" alt="Image" src="https://github.com/TUIASI-AC-IoT/proiectrcp2025-biteater/issues/1#issue-3772923834" /><br/><br/>
 
 ## 📦 Packet Structure (Message Format)
 
@@ -200,10 +204,11 @@ The application uses **Textual** to provide an interactive experience within the
 ### Server UI
 
 * **START SERVER:** Begins the UDP listening service.
+* **STOP SERVER:** Stop the UDP listening service.
 * **SETTINGS:** Allows dynamic configuration of:
     * `size of window` (the size of the sliding window).
     * `Timeout` (the interval before a packet is considered lost and retransmitted).
-* **PROCESS DATA:** Displays the activity log, received packets, and the status of ongoing transfer sessions.
+* **DISPLAY TERMINAL:** Displays the activity log, received packets, and the status of ongoing transfer sessions.
 
 ---
 
