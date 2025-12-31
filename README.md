@@ -25,8 +25,8 @@ Settings Menu<br/><br/>
 ---
 
 ## Demo SERVER<br/>
-Main Menu<br/><br/>
-<img width="800" height="600" alt="Image" src="https://github.com/TUIASI-AC-IoT/proiectrcp2025-biteater/issues/1#issue-3772923834" /><br/><br/>
+Server_UI<br/><br/>
+<img width="800" height="600" alt="Image" src="https://github.com/user-attachments/assets/95d057b2-34de-413f-9172-850b0bd3e9e0"  /><br/><br/>
 
 ## 📦 Packet Structure (Message Format)
 
