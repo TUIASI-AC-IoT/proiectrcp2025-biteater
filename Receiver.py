@@ -9,7 +9,7 @@ SENDER_ADDR = ("127.0.0.1", 5000)
 RECEIVER_ADDR = ("127.0.0.1", 6000)
 
 class Receiver:
-    def __init__(self, bind_addr=RECEIVER_ADDR, sender_addr=SENDER_ADDR):
+    def __init__(self, bind_addr=RECEIVER_ADDR, sender_addr=SENDER_ADDR,packet_log = None):
 
         self.__sock: socket.socket | None = None
 
@@ -23,6 +23,8 @@ class Receiver:
 
         self.__buffer: dict = {}  #sequence -> message
         self.__delivered = []
+        self.packet_log = packet_log
+        self.log_rx_tx = "------------------ RX ---------------------"
 
     def set_window_size(self, window_size: int):
         self.__window_size = window_size
@@ -43,7 +45,7 @@ class Receiver:
         # Permite refolosirea adresei imediat
         self.__sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.__sock.bind(self.__bind_addr)
-
+        self.print_rx()
         print("Receiver started")
         self.__reset()
 
@@ -59,10 +61,16 @@ class Receiver:
         ack = Message(PacketType.ACK,seq,"")
         self.__sock.sendto(ack.serialize(), self.__sender_addr)
 
+    def print_packets(self,txt):
+        if self.packet_log:
+            self.packet_log(str(txt))
+    def print_rx(self):
+        if self.log_rx_tx:
+            self.print_packets(self.log_rx_tx)
     def process_packet(self,message):
-
         seq = message.sequence
         print(message)
+        self.print_packets(message)
         # 1. END packet -> set total packets to receive
         if message.packet_type == PacketType.END:
             print("RECEIVED END PACKET")

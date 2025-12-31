@@ -4,8 +4,8 @@ from pathlib import Path
 
 from textual import on, work
 from textual.app import App, ComposeResult
-from textual.containers import Vertical, CenterMiddle, Container, Horizontal
-from textual.widgets import Header, Button, Footer, Label, Log
+from textual.containers import Vertical, Container, Horizontal
+from textual.widgets import Header, Button, Footer, Log
 
 from DivideFile import divide_file
 from Message import PacketType
@@ -14,119 +14,7 @@ from ReconstructFile import reconstruct_string
 from Sender import Sender
 from JsonFile import *
 from CustomModalScreens import SettingsScreen
-
-class ServerDeprecated:
-    sender_recv = ("127.0.0.1", 8000)
-    sender_send = ("127.0.0.1", 7000)
-    receiver_recv = ("127.0.0.1", 6000)
-    receiver_send = ("127.0.0.1", 5000)
-
-    def __init__(self):
-        self.__receiver: Receiver = Receiver(ServerDeprecated.receiver_recv, ServerDeprecated.receiver_send)
-        self.__sender = Sender(ServerDeprecated.sender_recv, ServerDeprecated.sender_send)
-        self.__message = []
-
-    def start(self):
-        #             #simulare primire mesaj
-        # file_path = "FileExplorerServer/dir1/file2.txt"
-        # destination_path = "FileExplorerServer/dir2"
-        # self.__message.append(Message(packet_type=PacketType.MOVE,sequence=0,data=file_path))
-        # self.__message.append(Message(packet_type=PacketType.DELETE,sequence=0,data=destination_path))
-        #
-        # #UPLOAD
-        # file_path = "FileExplorerServer/dir1/file1.txt"
-        # content = "HELLO WORLD"
-        # destination_path = "FileExplorerServer/dir2"
-        # self.__message.append(Message(packet_type=PacketType.UPLOAD,sequence=0,data=file_path))
-        # self.__message.append(Message(packet_type=PacketType.DELETE,sequence=0,data=content))
-        while True:
-            self.__receiver.start()  #blocant
-            self.__message = self.__receiver.get_ordered_packets()
-
-            if self.__message:
-                print("\tCommand received ...")
-                self.__sender = Sender(ServerDeprecated.sender_recv, ServerDeprecated.sender_send)
-                try:
-                    self.process_message()
-                except Exception as e:
-                    print(e)
-            print("Job done. Waiting for next command...")
-            self.__message = []
-
-
-    def process_message(self):
-        if not self.__message:
-            return
-        msg = self.__message.pop(0)
-        operation = msg.packet_type
-
-        if operation == PacketType.DELETE: # 1. [ ] 2.[path]
-            file_path = reconstruct_string(self.__receiver.get_ordered_packets())
-            if os.path.exists(file_path):
-                os.remove(file_path)
-            else:
-                print("The file does not exist")
-
-        elif operation == PacketType.DOWNLOAD: #  1.[ ]  [path1] [path2] ...
-            src = reconstruct_string(self.__receiver.get_ordered_packets())
-            if os.path.exists(src):
-                data_list = divide_file(Path(src))
-                packet_list = [Message(PacketType.DATA, i, data_list[i]) for i in range(len(data_list))]
-
-            else:
-                print("The file does not exist")
-                packet_list = [Message(PacketType.DATA, 0,"!!! NO PROVIDED DATA !!!")]
-
-            self.__sender.set_content(packet_list)
-            self.__sender.start()
-
-        elif operation == PacketType.MOVE: # 1.[ ] [source_file_name1] [source_file_name2]....  [destination_path1] [destination_path2] ...
-            src = reconstruct_string(self.__receiver.get_ordered_packets())
-            self.__receiver.start()
-            dst = reconstruct_string(self.__receiver.get_ordered_packets())
-
-            print(src)
-            if os.path.exists(src) and os.path.exists(dst):
-                shutil.move(src, dst)
-            else:
-                print("The file does not exist")
-
-        elif operation == PacketType.UPLOAD:   # 1.[ ]  [dst1] [dst2] ...
-            # receive file_name
-            destination = reconstruct_string(self.__receiver.get_ordered_packets())
-            print("destination = ", destination)
-            #  0-N. [data]
-            self.__receiver.start()
-            # pachete de tip data mai departe
-            file_content = reconstruct_string(self.__receiver.get_ordered_packets())
-
-            with open(destination, "w") as destination_file:
-                destination_file.write(file_content)
-
-        elif operation == PacketType.HIERARCHY:  #1. []
-            folder: dict = folder_to_dict("FileExplorerServer")
-            json_packets: list[Message] = divide_json(folder)
-
-            self.__sender.set_content(json_packets)
-            self.__sender.start()
-
-        elif operation == PacketType.SETTINGS: #1.[] 2.[window_size] 3.[timeout]
-            msg2 = self.__message.pop(0)
-            msg3 = self.__message.pop(0)
-            window_size = int(msg2.data)
-            timeout = float(msg3.data)
-            print(window_size)
-            print(timeout)
-            self.__receiver.set_window_size(window_size)
-            self.__sender.set_window_size(window_size)
-            self.__sender.set_timeout(timeout)
-
-    def stop(self):
-        if self.__receiver:
-            self.__receiver.stop()
-        if self.__sender:
-            self.__sender.stop()
-
+import threading
 
 class Server:
     sender_recv = ("127.0.0.1", 8000)
@@ -134,28 +22,19 @@ class Server:
     receiver_recv = ("127.0.0.1", 6000)
     receiver_send = ("127.0.0.1", 5000)
 
-    def __init__(self,app_app_log_callback,packet_log_callback):
-        self.__receiver: Receiver = Receiver(Server.receiver_recv, Server.receiver_send)
-        self.__sender = Sender(Server.sender_recv, Server.sender_send)
-        self.__message = []
-
-        self.app_log = app_app_log_callback
+    def __init__(self,app_log_callback,packet_log_callback):
         self.packet_log = packet_log_callback
-
+        self.__receiver: Receiver = Receiver(Server.receiver_recv, Server.receiver_send,self.packet_log)
+        self.__sender = Sender(Server.sender_recv, Server.sender_send,self.packet_log)
+        self.__message = []
+        self.app_log = app_log_callback
         self.running = False
-
-    def app_log_packet_details(self, packets, direction="RECEIVED"):
-        self.packet_app_log(f"--- BATCH {direction} ({len(packets)} packets) ---")
-        for p in packets:
-            content_preview = str(p.data)[:20] + "..." if len(str(p.data)) > 20 else str(p.data)
-            self.packet_app_log(f"[SEQ: {p.seq}] [TYPE: {p.packet_type}] Data: {content_preview}")
-        self.packet_app_log("----------------------------------------")
 
     def update_settings(self,window_size,timeout):
         self.__sender.set_window_size(window_size)
         self.__sender.set_timeout(timeout)
         self.__receiver.set_window_size(window_size)
-        self.app_log(f"Settings updated: Window={window_size}, Timeout={timeout}")
+        self.app_log(f"Settings updated: WindowSize={window_size}, Timeout={timeout}")
 
     def process_message(self):
         if not self.__message:
@@ -164,6 +43,7 @@ class Server:
         operation = msg.packet_type
 
         if operation == PacketType.DELETE: # 1. [ ] 2.[path]
+            self.app_log("Command received -> [DELETE]")
             file_path = reconstruct_string(self.__receiver.get_ordered_packets())
             if os.path.exists(file_path):
                 os.remove(file_path)
@@ -172,6 +52,7 @@ class Server:
                 self.app_log(f"File not found for deletion: {file_path}")
 
         elif operation == PacketType.DOWNLOAD: #  1.[ ]  [path1] [path2] ...
+            self.app_log("Command received -> [DOWNLOAD]")
             src = reconstruct_string(self.__receiver.get_ordered_packets())
             self.app_log(f"Download request for : {src}")
             if os.path.exists(src):
@@ -186,6 +67,7 @@ class Server:
             self.__sender.start()
 
         elif operation == PacketType.MOVE: # 1.[ ] [source_file_name1] [source_file_name2]....  [destination_path1] [destination_path2] ...
+            self.app_log("Command received -> [MOVE]")
             src = reconstruct_string(self.__receiver.get_ordered_packets())
             self.__receiver.start()
             dst = reconstruct_string(self.__receiver.get_ordered_packets())
@@ -198,6 +80,7 @@ class Server:
                 self.app_log("Source or Destination does not exist")
 
         elif operation == PacketType.UPLOAD:   # 1.[ ]  [dst1] [dst2] ...
+            self.app_log("Command received -> [UPLOAD]")
             # receive file_name
             destination = reconstruct_string(self.__receiver.get_ordered_packets())
             self.app_log(f"Receiving upload to: {destination}")
@@ -205,12 +88,12 @@ class Server:
             self.__receiver.start()
             # pachete de tip data mai departe
             file_content = reconstruct_string(self.__receiver.get_ordered_packets())
-            self.app_log("Upload complete")
             with open(destination, "w") as destination_file:
                 destination_file.write(file_content)
             self.app_log("-> Upload complete")
 
         elif operation == PacketType.HIERARCHY:  #1. []
+            self.app_log("Command received -> [HIERARCHY]")
             self.app_log("Sending Hierarchy...")
             folder: dict = folder_to_dict("FileExplorerServer")
             json_packets: list[Message] = divide_json(folder)
@@ -219,6 +102,7 @@ class Server:
             self.__sender.start()
 
         elif operation == PacketType.SETTINGS: #1.[] 2.[window_size] 3.[timeout]
+            self.app_log("Command received -> [SETTINGS]")
             msg2 = self.__message.pop(0)
             msg3 = self.__message.pop(0)
             window_size = int(msg2.data)
@@ -230,8 +114,8 @@ class Server:
         self.__message = self.__receiver.get_ordered_packets()
 
         if self.__message:
-            self.app_log("Command received ...")
-            self.__sender = Sender(Server.sender_recv, Server.sender_send)
+            # self.app_log("Command received ...")
+            self.__sender = Sender(Server.sender_recv, Server.sender_send,self.packet_log)
             try:
                 self.process_message()
             except Exception as e:
@@ -326,7 +210,12 @@ class ServerGUI(App):
         self.query_one("#app_log", Log).write_line(text)
 
     def write_packet_log(self,text:str):
-        self.query_one("#packet_log", Log).write_line(text)
+        log = self.query_one("#packet_log", Log)
+
+        if threading.get_ident() == self._thread_id:
+            log.write_line(text)
+        else:
+            self.call_from_thread(log.write_line,text)
 
 
     @on(Button.Pressed, "#start")
@@ -339,7 +228,7 @@ class ServerGUI(App):
             self.query_one("#stop").disabled = False
             self.query_one("#settings").disabled = True
 
-            self.write_to_terminal("Server STARTED")
+            self.write_to_terminal("\tServer STARTED")
             self.run_server_worker()
 
     @on(Button.Pressed, "#stop")
@@ -352,7 +241,7 @@ class ServerGUI(App):
             self.query_one("#stop").disabled = True
             self.query_one("#settings").disabled = False
 
-            self.write_to_terminal("Server STOPPED")
+            self.write_to_terminal("\tServer STOPPED")
 
     @work(thread=True)
     def run_server_worker(self):

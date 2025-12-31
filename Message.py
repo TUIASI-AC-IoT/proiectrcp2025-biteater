@@ -27,7 +27,7 @@ class Message:
         self.data = data
 
     def __str__(self):
-        return f"NR {self.sequence} Tip Packet: {self.packet_type}, Continut: {self.data}"
+        return f"[{self.sequence}] PacketType: {self.packet_type.name}, Data: *******PRIVATE DATA******"
 
     def serialize(self):
         packet_type = self.packet_type.value.encode('ascii') # 2 bytes

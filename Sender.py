@@ -12,7 +12,7 @@ content_ = ["anna", "belly", "card", "dima", "elisei", "frate", "gica", "hrean",
 content__ = [Message(PacketType.DATA, i, content_[i]) if i != 0 else Message(PacketType.DELETE, i, content_[i])  for i in range(0, len(content_)) ]
 
 class Sender:
-    def __init__(self, bind_addr=SENDER_ADDR, receiver_addr=RECEIVER_ADDR) -> None:
+    def __init__(self, bind_addr=SENDER_ADDR, receiver_addr=RECEIVER_ADDR,packet_log = None) -> None:
 
         self.__content: list[Message] = []
 
@@ -28,9 +28,9 @@ class Sender:
         self.__acked_packets = set()                      # o multime de elemente unice
         self.__running: Event = Event()
         self.__timers = {}                                # seq -> Timer
-
+        self.packet_log = packet_log
         self.__total_packets = len(self.__content)
-
+        self.log_rx_tx = "------------------ TX ---------------------"
 
     def set_timeout(self, timeout: float) -> None:
         self.__timeout = timeout
@@ -48,6 +48,8 @@ class Sender:
 
     def start(self) -> None:
         print("Sender is starting...")
+        self.print_packets(self.log_rx_tx)
+
         # initialization moved from __init__
         # because I want to work again with the self.__sock after I closed it in previous iteration
         self.__sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -76,7 +78,9 @@ class Sender:
         self.__content.clear()
         print("Sender stopped")
 
-
+    def print_packets(self,txt):
+        if self.packet_log:
+            self.packet_log(txt)
     def __receive_acks(self) -> None:
         while self.__running.is_set():
 
@@ -95,6 +99,7 @@ class Sender:
             message = Message.deserialize(raw_data)
             if message.packet_type == PacketType.ACK:
                 print(f"From __receive_acks, a ack has been received with this content {message}")
+                self.print_packets(f"ACK [{message.sequence}]")
                 with self.__lock:
                     # pentru self.timers ,self.left_window_margin, self.acked_packets (se ruleaza alt thread care porneste timere, si verifica existenta unui ack)
                     # mai exact __send_packet() si __start_timer()

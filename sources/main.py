@@ -1,4 +1,3 @@
-
 class ServerDeprecated:
     sender_recv = ("127.0.0.1", 8000)
     sender_send = ("127.0.0.1", 7000)
@@ -110,4 +109,3 @@ class ServerDeprecated:
             self.__receiver.stop()
         if self.__sender:
             self.__sender.stop()
-
