@@ -81,23 +81,23 @@ Each stage is started by a _receive.start()_ call from the **server** and _sende
 | **Upload** | **1** | `0. Message(PacketType.UPLOAD, 0, "")` | Initiates the upload process. |
 | | | `1. Message(PacketType.DATA, 1, filename[0])` | Sends the first chunk of the filename. |
 | | | `...` | ... |
-| | | `k. Message(PacketType.DATA, k, filename[k-1])` | Sends the last chunk of the filename. |
-| | **2** | `k+2. Message(PacketType.DATA, k+2, content[0])` | Sends the first chunk of actual file content. |
+| | | `n-1. Message(PacketType.DATA, n - 1, filename[n - 1])` | Sends the last chunk of the filename. |
+| | **2** | `0. Message(PacketType.DATA, 0, content[0])` | Sends the first chunk of actual file content. |
 | | | `...` | ... |
-| | | `k+n+2. Message(PacketType.DATA, ..., content[n-1])` | Sends the last chunk of file content. |
+| | | `m - 1. Message(PacketType.DATA, ..., content[m])` | Sends the last chunk of file content. |
 | **Download** | **1** | `0. Message(PacketType.DOWNLOAD, 0, "")` | Requests a file download. |
 | | | `1. Message(PacketType.DATA, 1, filename[0])` | Sends the first chunk of the requested filename. |
 | | | `...` | ... |
-| | | `k. Message(PacketType.DATA, k, filename[k-1])` | Sends the last chunk of the requested filename. |
+| | | `n - 1. Message(PacketType.DATA, n - 1, filename[n-1])` | Sends the last chunk of the requested filename. |
 | **Move** | **1** | `0. Message(PacketType.MOVE, 0, "")` | Requests a file move/rename. |
 | | | `1. Message(PacketType.DATA, 1, src_name[0])` | Sends first chunk of the **Source** path. |
 | | | `...` | ... |
-| | | `k. Message(PacketType.DATA, k, src_name[k-1])` | Sends last chunk of the **Source** path. |
-| | **2** | `k+2. Message(PacketType.DATA, k+2, dest_name[0])` | Sends first chunk of the **Destination** path. |
+| | | `n - 1. Message(PacketType.DATA, n - 1, src_name[n-1])` | Sends last chunk of the **Source** path. |
+| | **2** | `0. Message(PacketType.DATA, 0, dest_name[0])` | Sends first chunk of the **Destination** path. |
 | | | `...` | ... |
-| | | `k+m+2. Message(PacketType.DATA, ..., dest_name[m-1])`| Sends last chunk of the **Destination** path. |
+| | | `m - 1. Message(PacketType.DATA, m - 1, dest_name[m-1])`| Sends last chunk of the **Destination** path. |
 | **Delete** | **1** | `0. Message(PacketType.DELETE, 0, "")` | Requests file deletion. |
-| | | `1..k. Message(PacketType.DATA, ..., filename[...])` | Sends filename chunks. |
+| | | `1..k - 1. Message(PacketType.DATA, ..., filename[...])` | Sends filename chunks. |
 | **Hierarchy**| **1** | `0. Message(PacketType.HIERARCHY, 0, "")` | Requests file hierarchy structure. |---
 
 ### ⚙️ Sliding Window Settings
@@ -296,6 +296,7 @@ The console is going to only listen to events happening in terminal 2
 - [UDP](https://www.geeksforgeeks.org/computer-networks/user-datagram-protocol-udp/)
 - [Textual Documentation](https://textual.textualize.io/)
 - [Textual GitHub Repository](https://github.com/Textualize/textual)
+
 
 
 
