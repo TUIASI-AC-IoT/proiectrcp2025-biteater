@@ -260,13 +260,17 @@ source venv/bin/activate
 pip install textual
 pip install textual-dev
 ```
-
-5. a) **To Run the application on web**
+5. **Create test folders**
+```bash
+python3 remove_and_generate_folders.py
+```
+ 
+7. a) **To Run the application on web**
 
 ```bash
 textual serve Client.py
 ```
-5. b) **To Run the application in terminal**
+6. b) **To Run the application in terminal**
 
 ```bash
 textual run Client.py
@@ -296,6 +300,7 @@ The console is going to only listen to events happening in terminal 2
 - [UDP](https://www.geeksforgeeks.org/computer-networks/user-datagram-protocol-udp/)
 - [Textual Documentation](https://textual.textualize.io/)
 - [Textual GitHub Repository](https://github.com/Textualize/textual)
+
 
 
 
