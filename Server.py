@@ -216,9 +216,8 @@ class ServerGUI(App):
         else:
             self.call_from_thread(log.write_line,text)
 
-
     @on(Button.Pressed, "#start")
-    def action_start_server(self):
+    def start_server(self):
         if not self.server_is_running:
             self.server_is_running = True
             self.server_app_logic.running = True
@@ -231,7 +230,7 @@ class ServerGUI(App):
             self.run_server_worker()
 
     @on(Button.Pressed, "#stop")
-    def action_stop_server(self):
+    def stop_server(self):
         if self.server_is_running:
             self.server_is_running = False
             self.server_app_logic.stop()

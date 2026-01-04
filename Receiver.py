@@ -73,7 +73,6 @@ class Receiver:
         self.print_packets(message)
         # 1. END packet -> set total packets to receive
         if message.packet_type == PacketType.END:
-            print("RECEIVED END PACKET")
             self.__expected_total = seq
             self.__send_ack(seq)
             return

@@ -7,7 +7,7 @@ def divide_file(filename_obj: Path) -> list[str]:
     with filename_obj.open("rb") as fd:
         c=0
         while True:
-            content = fd.read(Constant.PACKET_SIZE)
+            content = fd.read(Constant.PACKET_SIZE - Constant.HEADER_SIZE)
             if content == b"":
                 break
 

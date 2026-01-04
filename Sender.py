@@ -81,6 +81,7 @@ class Sender:
     def print_packets(self,txt):
         if self.packet_log:
             self.packet_log(txt)
+
     def __receive_acks(self) -> None:
         while self.__running.is_set():
 
@@ -158,7 +159,7 @@ class Sender:
         def action_timeout():
             with self.__lock:
                 if seq not in self.__acked_packets and self.__running.is_set():
-                    print(f"[Sender] TIMEOUT seq={seq}, retransmitting")
+                    self.print_packets(f"[Sender] TIMEOUT seq={seq}, retransmitting")
                 else:
                     return
             self.__send_packet(seq)
