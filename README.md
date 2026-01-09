@@ -265,7 +265,7 @@ pip install textual-dev
 python3 remove_and_generate_folders.py
 ```
  
-7. a) **To Run the application on web**
+6. a) **To Run the application on web**
 
 ```bash
 textual serve Client.py
