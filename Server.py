@@ -17,10 +17,14 @@ from CustomModalScreens import SettingsScreen
 import threading
 
 class Server:
-    sender_recv = ("127.0.0.1", 8000)
-    sender_send = ("127.0.0.1", 7000)
-    receiver_recv = ("127.0.0.1", 6000)
-    receiver_send = ("127.0.0.1", 5000)
+    ip_old = '127.0.0.1'
+    my_ip = '0.0.0.0'
+    client_ip = '10.92.197.156'
+    
+    sender_recv = (my_ip, 8000)
+    sender_send = (client_ip, 7000)
+    receiver_recv = (my_ip, 6000)
+    receiver_send = (client_ip, 5000)
 
     def __init__(self,app_log_callback,packet_log_callback):
         self.packet_log = packet_log_callback

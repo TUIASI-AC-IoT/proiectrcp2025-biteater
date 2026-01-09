@@ -28,10 +28,13 @@ class ClientGUI(App):
         ("q", "quit", "Quit"),
         ("s", "stop_operation", "Stop Operations")
     ]
-    sender_recv = ("127.0.0.1", 5000)
-    sender_send = ("127.0.0.1", 6000)
-    receiver_recv = ("127.0.0.1", 7000)
-    receiver_send = ("127.0.0.1", 8000)
+    my_ip = '0.0.0.0'
+    ip = '10.92.197.244'
+    ip_old = '127.0.0.1'
+    sender_recv = (my_ip, 5000)
+    sender_send = (ip, 6000)
+    receiver_recv = (my_ip, 7000)
+    receiver_send = (ip, 8000)
     server_exists = True               # for debug purposes while server is off
 
     def __init__(self):

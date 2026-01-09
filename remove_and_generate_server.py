@@ -6,7 +6,6 @@ import shutil
 # Configuration
 BASE_DIR = "./"
 SERVER_ROOT = os.path.join(BASE_DIR, "FileExplorerServer")
-CLIENT_ROOT = os.path.join(BASE_DIR, "FileExplorerClient")
 
 def create_folder(path):
     if not os.path.exists(path):
@@ -30,9 +29,6 @@ def create_dummy_binary_file(path, size_in_mb):
 
 def generate_environment():
     print(f"--- SETTING UP ENVIRONMENT IN: {os.path.abspath(BASE_DIR)} ---\n")
-
-    # 1. SERVER SIDE SETUP
-# -----------------------------------
 
     path = os.path.join(SERVER_ROOT, "downloads_test")
     create_folder(path)
@@ -73,30 +69,12 @@ def generate_environment():
     create_folder(special_path)
     create_text_file(os.path.join(special_path, "file with spaces.txt"), "This filename tests URL encoding.")
 
-    # 2. CLIENT SIDE SETUP
-# -----------------------------------------------------
-
-    # A. Standard Uploads
-    upload_path = os.path.join(CLIENT_ROOT, "upload_queue")
-    create_folder(upload_path)
-    create_text_file(os.path.join(upload_path, "new_contract.txt"), "%PDF-1.5\nSigned contract content...")
-    create_dummy_binary_file(os.path.join(upload_path, "vacation_photo.txt"), 2.0)
-
-    # B. Bulk Uploads
-    bulk_path = os.path.join(CLIENT_ROOT, "bulk_upload_test")
-    create_folder(bulk_path)
-    for i in range(1, 51):
-        filename = f"item_{i:03d}.dat"
-        create_text_file(os.path.join(bulk_path, filename), f"Data content for item {i}")
-
-
     print("\n--- GENERATION COMPLETE ---")
     print(f"Test files created in: {os.path.abspath(BASE_DIR)}")
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     if os.path.exists(SERVER_ROOT):
         shutil.rmtree(SERVER_ROOT)
-
-    if os.path.exists(CLIENT_ROOT):
-        shutil.rmtree(CLIENT_ROOT)
     generate_environment()
+
