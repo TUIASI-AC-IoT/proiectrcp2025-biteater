@@ -8,8 +8,7 @@ import socket
 
 SENDER_ADDR = ("127.0.0.1", 5000)
 RECEIVER_ADDR = ("127.0.0.1", 6000)
-content_ = ["anna", "belly", "card", "dima", "elisei", "frate", "gica", "hrean", "zoo"]
-content__ = [Message(PacketType.DATA, i, content_[i]) if i != 0 else Message(PacketType.DELETE, i, content_[i])  for i in range(0, len(content_)) ]
+
 
 class Sender:
     def __init__(self, bind_addr=SENDER_ADDR, receiver_addr=RECEIVER_ADDR,packet_log = None) -> None:
@@ -19,18 +18,18 @@ class Sender:
         self.__sock: socket.socket | None = None
 
         self.__bind_address : str           = bind_addr
-        self.__receiver_addr = receiver_addr
-        self.__window_size = Constant.WINDOW_SIZE
-        self.__timeout = Constant.PACKET_TIMEOUT
-        self.__current_packet = 0                         # pachetul curent care se transmite
-        self.__left_window_margin = 0                     # indica indexul din stanga a ferestrei glisante
-        self.__lock = RLock()                              # pentru a schimba continutul variabelor self.timers, self.acked_packets, self.current_packet
-        self.__acked_packets = set()                      # o multime de elemente unice
-        self.__running: Event = Event()
-        self.__timers = {}                                # seq -> Timer
-        self.packet_log = packet_log
-        self.__total_packets = len(self.__content)
-        self.log_rx_tx = "------------------ TX ---------------------"
+        self.__receiver_addr                = receiver_addr
+        self.__window_size                  = Constant.WINDOW_SIZE
+        self.__timeout                      = Constant.PACKET_TIMEOUT
+        self.__current_packet               = 0         # pachetul curent care se transmite
+        self.__left_window_margin           = 0         # indica indexul din stanga a ferestrei glisante
+        self.__lock                         = RLock()   # pentru a schimba continutul variabelor self.timers, self.acked_packets, self.current_packet
+        self.__acked_packets                = set()     # o multime de elemente unice
+        self.__running: Event               = Event()
+        self.__timers                       = {}        # seq -> Timer
+        self.packet_log                     = packet_log
+        self.__total_packets                = len(self.__content)
+        self.log_rx_tx                      = "------------------ TX ---------------------"
 
     def set_timeout(self, timeout: float) -> None:
         self.__timeout = timeout
@@ -39,9 +38,9 @@ class Sender:
         self.__window_size = window_size
 
     def set_content(self, content: list[Message]) -> None:
-        self.__content = content
-        self.__current_packet = 0                         # pachetul curent care se transmite
-        self.__left_window_margin = 0                     # indica indexul din stanga a ferestrei glisante
+        self.__content              = content
+        self.__current_packet       = 0                # pachetul curent care se transmite
+        self.__left_window_margin   = 0                 # indica indexul din stanga a ferestrei glisante
         self.__acked_packets.clear()
         self.__timers.clear()
         self.__total_packets = len(self.__content)
@@ -60,10 +59,10 @@ class Sender:
         self.__running.set()
 
         # we do not wait for it's termination (daemon = True), it is automatically terminated
-        __ack_thread = Thread(target=self.__receive_acks, daemon=True) # WHY here and not in __init__() ?
+        # __ack_thread
+        Thread(target=self.__receive_acks, daemon=True).start() # WHY here and not in __init__() ?
         # because, we want to reuse the same object Sender and when reusing you can't start a thread
         # that was previously terminated
-        __ack_thread.start()
         self.__send_loop()
 
 
@@ -81,6 +80,7 @@ class Sender:
     def print_packets(self,txt):
         if self.packet_log:
             self.packet_log(txt)
+
     def __receive_acks(self) -> None:
         while self.__running.is_set():
 
@@ -158,7 +158,7 @@ class Sender:
         def action_timeout():
             with self.__lock:
                 if seq not in self.__acked_packets and self.__running.is_set():
-                    print(f"[Sender] TIMEOUT seq={seq}, retransmitting")
+                    self.print_packets(f"[Sender] TIMEOUT seq={seq}, retransmitting")
                 else:
                     return
             self.__send_packet(seq)
@@ -181,14 +181,3 @@ def test_receive_message():
 
         sock.sendto(Message(PacketType.ACK, message.sequence, message.data + "-ack").serialize(), SENDER_ADDR)
         print(message)
-
-def main():
-    sender = Sender(content__,PacketType.DATA)
-    # thread1 = Thread(target=test_receive_message)
-    # thread1.daemon = True
-    # thread1.start()
-    # sleep(0.1)
-    sender.start()
-
-if __name__ == "__main__":
-    main()

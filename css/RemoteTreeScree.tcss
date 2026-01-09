@@ -12,7 +12,7 @@ RemoteTree {
 Label {
     width: 100%;
     text-align: center;
-    background: $accent;
+    background: $primary;
     color: auto;
     margin-bottom: 1;
 }

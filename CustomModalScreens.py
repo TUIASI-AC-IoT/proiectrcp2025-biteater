@@ -139,16 +139,19 @@ class MoveScreen(ModalScreen[tuple[str, str]]):
         ("escape", "back", "Back")
     ]
 
-    def __init__(self, server_data: dict | None =None, client_data: dict | None=None):
+    def __init__(self, title: str, server_data: dict | None =None, client_data: dict | None=None):
         super().__init__()
         self.__server_data: dict | None = server_data if server_data else SERVER_DATA
         self.__client_data: dict | None = client_data if client_data else None
+
+        self.__title = title
 
         self.__src = ""
         self.__dst = ""
 
     def compose(self):
         with Vertical(id="dialog"):
+            yield Label(self.__title, id="operation_label")
             yield Label("Select Source File -> Destination Folder", id="status_lbl")
             with Horizontal():
                 with Vertical(classes="column"):

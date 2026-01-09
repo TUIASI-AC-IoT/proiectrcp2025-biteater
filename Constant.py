@@ -15,7 +15,7 @@ class Constant:
     # '!I' = 4 bytes for Sequence Number (Unsigned Integer, Network Byte Order)
     _HEADER_FMT: Final[str] = '!2sI'
     HEADER_SIZE: Final[int] = struct.calcsize(_HEADER_FMT)  # 6 bytes
-    PACKET_SIZE: Final[int] = 32 - HEADER_SIZE
+    PACKET_SIZE: Final[int] = 512 - HEADER_SIZE
 
     # Filesystem Paths
     CLIENT_FOLDER_PATH: Final[str] = "FileExplorerClient"
