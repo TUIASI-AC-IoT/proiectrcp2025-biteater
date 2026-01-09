@@ -128,11 +128,3 @@ class Receiver:
 
     def get_ordered_packets(self):
         return self.__delivered
-
-def main():
-    receiver = Receiver()
-    receiver.start()
-
-
-if __name__== "__main__":
-    main()
